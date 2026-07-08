@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3x3x4X Core Prototype</title>
+  <link rel="stylesheet" href="3x3x4x-core-prototype.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="top-bar">
+      <div>
+        <p class="eyebrow">3x3x4X</p>
+        <h1>3×3×4X</h1>
+      </div>
+      <div class="turn-card" id="turnSummary"></div>
+      <div class="top-actions">
+        <a class="button-link" href="3x3x4x-rulebook.html" target="_blank" rel="noreferrer">ルール</a>
+        <label class="field compact">
+          <span>中央C</span>
+          <select id="centralSeed">
+            <option value="random">ランダム</option>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+        </label>
+        <button type="button" id="newGameButton">新規</button>
+        <button type="button" id="undoButton">戻す</button>
+      </div>
+    </header>
+
+    <section class="play-layout">
+      <details class="log-panel collapsible-panel" open>
+        <summary class="panel-summary">
+          <h2>ログ</h2>
+        </summary>
+        <div class="panel-body log-body">
+          <div class="log-tools">
+            <button type="button" id="copyLogButton">コピー</button>
+          </div>
+          <ol id="logList" class="log-list"></ol>
+        </div>
+      </details>
+
+      <details class="board-panel collapsible-panel" aria-label="盤面" open>
+        <summary class="panel-summary">
+          <h2>盤面</h2>
+        </summary>
+        <div class="panel-body board-body">
+          <div class="board" id="board"></div>
+          <div class="legend">
+            <span><i class="legend-chip owner-a"></i>A支配</span>
+            <span><i class="legend-chip owner-b"></i>B支配</span>
+            <span><i class="legend-chip neutral"></i>中立</span>
+            <span><i class="legend-chip fort"></i>要塞</span>
+          </div>
+        </div>
+      </details>
+
+      <details class="control-panel collapsible-panel" open>
+        <summary class="panel-summary">
+          <h2>操作パネル</h2>
+        </summary>
+        <div class="panel-body control-body">
+          <div class="players" id="players"></div>
+          <div class="resolve-row">
+            <button type="button" class="primary" id="resolveButton">ターン解決</button>
+            <p id="validationMessage" class="validation"></p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="reference-panel" aria-label="操作説明と勝利条件">
+      <details class="reference-card collapsible-panel" open>
+        <summary class="panel-summary">
+          <h2>操作簡易説明</h2>
+        </summary>
+        <div class="panel-body">
+          <ul class="quick-list">
+            <li>起点に自軍駒がある行だけ入力します。</li>
+            <li>1〜2ターン目は各プレイヤー1行動、3ターン目以降は駒1個につき1行動です。</li>
+            <li>有料行動を複数書く場合は、優先の数字が小さい順に資産を支払います。</li>
+            <li>対象が不要な Exploit / Fortify / Produce は、対象欄を空のまま解決できます。</li>
+            <li>本拠接続ビンゴ成立時は、成立した行・列の中央マスが+1Pされます。</li>
+            <li>グレーの候補は、現在の盤面・資産・駒数では選べない行動です。</li>
+          </ul>
+          <p class="manual-link">
+            <a class="button-link" href="3x3x4x-rulebook.html" target="_blank" rel="noreferrer">完全版ルールブックを開く</a>
+          </p>
+        </div>
+      </details>
+
+      <details class="reference-card collapsible-panel" open>
+        <summary class="panel-summary">
+          <h2>勝利条件</h2>
+        </summary>
+        <div class="panel-body">
+          <div class="condition-grid">
+            <section>
+              <h3>殲滅勝利</h3>
+              <p>敵本拠地を占領する、または敵の盤上駒をすべて失わせる。</p>
+            </section>
+            <section>
+              <h3>内政勝利</h3>
+              <p>ターン終了時、自分だけが土地価値合計11P以上で相手が10P以下。</p>
+            </section>
+            <section>
+              <h3>判定勝利</h3>
+              <p>10ターン終了時、土地価値合計が高い側。同点なら中央5番の支配者。</p>
+            </section>
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <script src="3x3x4x-core-prototype.js"></script>
+</body>
+</html>
