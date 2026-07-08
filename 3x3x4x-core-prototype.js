@@ -28,12 +28,12 @@
   ];
   const ACTIONS = ["Explore", "Exploit", "Fortify", "Exterminate", "Produce", "Move"];
   const ACTION_LABELS = {
-    Explore: "Explore",
-    Exploit: "Exploit",
-    Fortify: "Fortify",
-    Exterminate: "Exterminate",
-    Produce: "Produce",
-    Move: "Move"
+    Explore: "探索",
+    Exploit: "開発",
+    Fortify: "要塞化",
+    Exterminate: "侵攻",
+    Produce: "生産",
+    Move: "移動"
   };
 
   const els = {
@@ -191,6 +191,16 @@
       const owner = current.owner ?? "N";
       const square = document.createElement("article");
       square.className = `cell owner-${owner}`;
+      square.classList.add(`value-${current.value}`);
+      if (id === HOME.A || id === HOME.B) {
+        square.classList.add("home-cell");
+      }
+      if (id === 5) {
+        square.classList.add("central-cell");
+      }
+      if (current.neutralCost > 0) {
+        square.classList.add("cost-cell");
+      }
       if (current.fort) {
         square.classList.add("fortified");
       }
@@ -583,7 +593,7 @@
 
   function actionName(action) {
     const target = action.target ? ` -> ${action.target}` : "";
-    return `${action.player}${action.row}: ${action.from}${target} ${action.type} x${action.units}`;
+    return `${action.player}${action.row}: ${action.from}${target} ${ACTION_LABELS[action.type] ?? action.type} x${action.units}`;
   }
 
   function validateActionCapacity(actions) {
@@ -727,7 +737,7 @@
 
     if (action.type === "Explore") {
       if (!target || !isAdjacent(action.from, action.target) || target.owner !== null) {
-        messages.push(`${actionName(action)}はExplore条件を満たさない。`);
+        messages.push(`${actionName(action)}は探索条件を満たさない。`);
         return null;
       }
       return {
@@ -736,13 +746,13 @@
         cost: target.neutralCost,
         priority: action.priority,
         order: action.row,
-        label: `${action.target}番Explore`
+        label: `${action.target}番探索`
       };
     }
 
     if (action.type === "Exterminate") {
       if (!target || !isAdjacent(action.from, action.target) || target.owner !== opponent(action.player)) {
-        messages.push(`${actionName(action)}はExterminate条件を満たさない。`);
+        messages.push(`${actionName(action)}は侵攻条件を満たさない。`);
         return null;
       }
       return {
@@ -751,7 +761,7 @@
         cost: invasionCost(target),
         priority: action.priority,
         order: action.row,
-        label: `${action.target}番Exterminate`
+        label: `${action.target}番侵攻`
       };
     }
 
@@ -762,7 +772,7 @@
         && totalPieces(action.player) < MAX_PIECES
         && source.pieces[action.player] < MAX_PIECES;
       if (!canPayForProduction) {
-        messages.push(`${actionName(action)}はProduce条件を満たさない。`);
+        messages.push(`${actionName(action)}は生産条件を満たさない。`);
         return null;
       }
       return {
@@ -771,7 +781,7 @@
         cost: 3,
         priority: action.priority,
         order: action.row,
-        label: `${action.from}番Produce`
+        label: `${action.from}番生産`
       };
     }
 
@@ -808,7 +818,7 @@
       }
       source.pieces[action.player] -= action.units;
       target.pieces[action.player] += action.units;
-      messages.push(`${action.player}は${action.units}駒を${action.from}番から${action.target}番へMove。`);
+      messages.push(`${action.player}は${action.units}駒を${action.from}番から${action.target}番へ移動。`);
     });
   }
 
@@ -855,7 +865,7 @@
       const countB = sumUnits(entries.filter((entry) => entry.player === "B"));
       if (countA > 0 && countB > 0 && countA === countB) {
         target.neutralCost = Math.min(3, target.neutralCost + 1);
-        messages.push(`${targetId}番Exploreは同数衝突。中立コストは${target.neutralCost}。`);
+        messages.push(`${targetId}番探索は同数衝突。中立コストは${target.neutralCost}。`);
         return;
       }
 
@@ -866,7 +876,7 @@
       target.value = 1;
       target.fort = false;
       target.neutralCost = 0;
-      messages.push(`${winner}が${targetId}番Exploreに成功。${sumUnits(winningEntries)}駒が進入。`);
+      messages.push(`${winner}が${targetId}番探索に成功。${sumUnits(winningEntries)}駒が進入。`);
     });
   }
 
@@ -1096,18 +1106,18 @@
         const source = cell(action.from);
         if (type === "Exploit") {
           if (source.owner !== action.player || source.fort || source.value >= 3) {
-            messages.push(`${actionName(action)}はExploit条件を満たさず失敗。`);
+            messages.push(`${actionName(action)}は開発条件を満たさず失敗。`);
             return;
           }
           const before = source.value;
           source.value = Math.min(3, source.value + action.units);
           available[action.player][action.from] -= action.units;
-          messages.push(`${action.player}は${action.from}番を${before}Pから${source.value}PへExploit。`);
+          messages.push(`${action.player}は${action.from}番を${before}Pから${source.value}Pへ開発。`);
         }
 
         if (type === "Fortify") {
           if (source.owner !== action.player || source.fort || source.value < 1) {
-            messages.push(`${actionName(action)}はFortify条件を満たさず失敗。`);
+            messages.push(`${actionName(action)}は要塞化条件を満たさず失敗。`);
             return;
           }
           source.fort = true;
@@ -1122,12 +1132,12 @@
             && totalPieces(action.player) < MAX_PIECES
             && source.pieces[action.player] < MAX_PIECES;
           if (!canProduce) {
-            messages.push(`${actionName(action)}はProduce条件を満たさず失敗。`);
+            messages.push(`${actionName(action)}は生産条件を満たさず失敗。`);
             return;
           }
           state.players[action.player].pending.push({ cell: action.from });
           available[action.player][action.from] -= action.units;
-          messages.push(`${action.player}は${action.from}番でProduce予約。`);
+          messages.push(`${action.player}は${action.from}番で生産予約。`);
         }
       });
     });
@@ -1188,9 +1198,9 @@
           && source.pieces[player] < MAX_PIECES;
         if (canCreate) {
           source.pieces[player] += 1;
-          messages.push(`${player}のProduce予約成功。${item.cell}番に1駒追加。`);
+          messages.push(`${player}の生産予約成功。${item.cell}番に1駒追加。`);
         } else {
-          messages.push(`${player}の${item.cell}番Produce予約は失敗。`);
+          messages.push(`${player}の${item.cell}番生産予約は失敗。`);
         }
       });
       state.players[player].pending = [];
