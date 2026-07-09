@@ -387,15 +387,73 @@
     if (cells.includes(id)) {
       square.classList.add("replay-active");
     }
+    if (currentReplayEvent.kind === "bingo" && cells.includes(id)) {
+      square.classList.add("bingo-cell", `bingo-${currentReplayEvent.player || "N"}`);
+    }
+    if (currentReplayEvent.kind === "bingo" && targets.includes(id)) {
+      square.classList.add("bingo-bonus");
+    }
+    const effect = currentReplayEvent.effect || "";
+    if (effect && cells.includes(id)) {
+      square.classList.add("event-cell", `event-${effect}`);
+    }
+    if (effect && targets.includes(id)) {
+      square.classList.add("event-target", `event-${effect}-target`);
+    }
   }
 
   function renderArrowOverlay() {
     const arrows = currentReplayEvent?.arrows || [];
-    if (arrows.length === 0) {
-      return `<svg class="board-arrow-layer" viewBox="0 0 100 100" aria-hidden="true"></svg>`;
-    }
     const arrowMarkup = arrows.map((arrow) => renderArrow(arrow)).join("");
-    return `<svg class="board-arrow-layer active" viewBox="0 0 100 100" aria-hidden="true">${arrowMarkup}</svg>`;
+    const bingoMarkup = renderBingoOverlay();
+    const activeClass = arrows.length > 0 || bingoMarkup ? " active" : "";
+    return `<svg class="board-arrow-layer${activeClass}" viewBox="0 0 100 100" aria-hidden="true">${bingoMarkup}${arrowMarkup}</svg>${renderEventCallout()}`;
+  }
+
+  function renderBingoOverlay() {
+    if (currentReplayEvent?.kind !== "bingo" || !currentReplayEvent.cells || currentReplayEvent.cells.length < 3) {
+      return "";
+    }
+    const cells = currentReplayEvent.cells;
+    const start = cellCenter(cells[0]);
+    const end = cellCenter(cells[cells.length - 1]);
+    const target = cellCenter(currentReplayEvent.targets?.[0] || cells[1]);
+    const player = currentReplayEvent.player || "N";
+    return `
+      <path class="bingo-line bingo-line-${player}" d="M ${start.x} ${start.y} L ${end.x} ${end.y}"></path>
+      <circle class="bingo-ring bingo-ring-${player}" cx="${target.x}" cy="${target.y}" r="15"></circle>
+      <circle class="bingo-spark bingo-spark-${player}" cx="${target.x}" cy="${target.y}" r="3.2"></circle>
+    `;
+  }
+
+  function renderEventCallout() {
+    if (!currentReplayEvent) {
+      return "";
+    }
+    const calloutTarget = currentReplayEvent.targets?.[0] || currentReplayEvent.cells?.[0];
+    const position = CELLS.includes(Number(calloutTarget))
+      ? cellCenter(Number(calloutTarget))
+      : { x: 50, y: 50 };
+    const positionStyle = `--callout-x: ${position.x}%; --callout-y: ${position.y}%;`;
+    if (currentReplayEvent.kind === "bingo") {
+      const player = currentReplayEvent.player || "";
+      return `
+        <div class="bingo-callout bingo-callout-${player}" style="${positionStyle}" aria-hidden="true">
+          <strong>BINGO!</strong>
+          <span>${player} ${currentReplayEvent.lineLabel || ""}</span>
+        </div>
+      `;
+    }
+    if (!currentReplayEvent.effectTitle) {
+      return "";
+    }
+    const effect = currentReplayEvent.effect || currentReplayEvent.kind || "system";
+    return `
+      <div class="event-callout event-callout-${effect}" style="${positionStyle}" aria-hidden="true">
+        <strong>${currentReplayEvent.effectTitle}</strong>
+        <span>${currentReplayEvent.effectDetail || currentReplayEvent.label || ""}</span>
+      </div>
+    `;
   }
 
   function renderArrow(arrow) {
@@ -455,8 +513,20 @@
     if (count <= 0) {
       return "";
     }
-    const dots = Array.from({ length: count }, () => `<i class="piece-dot ${player}"></i>`).join("");
-    return `<span class="piece-stack">${dots}<span>${player}x${count}</span></span>`;
+    const soldiers = Array.from({ length: count }, () => renderSoldierIcon(player)).join("");
+    return `<span class="piece-stack ${player}">${soldiers}<span>${player}x${count}</span></span>`;
+  }
+
+  function renderSoldierIcon(player) {
+    return `
+      <svg class="piece-soldier ${player}" viewBox="0 0 32 42" aria-hidden="true" focusable="false">
+        <path class="soldier-shadow" d="M7 39c2.1 1.4 15.9 1.4 18 0 1.5-1 0.4-2.8-2-3.4-3.7-0.9-10.3-0.9-14 0-2.4 0.6-3.5 2.4-2 3.4z"></path>
+        <path class="soldier-body" d="M16 3c4.1 0 7.2 2.8 7.2 6.9 0 2.4-1 4.5-2.7 5.8 4.6 2.1 7.5 7 7.5 13.6v3.3c0 1.8-1.5 3.2-3.3 3.2H7.3C5.5 35.8 4 34.4 4 32.6v-3.3c0-6.6 2.9-11.5 7.5-13.6-1.7-1.3-2.7-3.4-2.7-5.8C8.8 5.8 11.9 3 16 3z"></path>
+        <path class="soldier-crest" d="M16 5.5c2.4 0 4.4 1.6 5 3.8H11c0.6-2.2 2.6-3.8 5-3.8z"></path>
+        <path class="soldier-shield" d="M7.3 22.2c2.9 0.7 5 3.3 5 6.3v4.1H7.2c-0.8 0-1.4-0.6-1.4-1.4v-2.6c0-2.4 0.5-4.6 1.5-6.4z"></path>
+        <path class="soldier-spear" d="M23.5 11.5l1.8-4.5 1.9 4.5-1.2 0.4v21.2h-1.4V11.9l-1.1-0.4z"></path>
+      </svg>
+    `;
   }
 
   function renderPlayers() {
@@ -2351,10 +2421,14 @@
         kind: "explore",
         player: winner,
         label: `${winner}: ${targetId}番 探索成功`,
+        effect: Number(targetId) === 5 ? "center" : "",
+        effectTitle: Number(targetId) === 5 ? "CENTER!" : "",
+        effectDetail: Number(targetId) === 5 ? `${winner} 中央制圧` : "",
         cells: [Number(targetId), ...winningEntries.map((entry) => entry.from)],
         sources: winningEntries.map((entry) => entry.from),
         targets: [Number(targetId)],
-        arrows: arrowsFromEntries(winningEntries, "explore")
+        arrows: arrowsFromEntries(winningEntries, "explore"),
+        duration: Number(targetId) === 5 ? 1400 : undefined
       });
     });
   }
@@ -2459,10 +2533,14 @@
         kind: "attack",
         player: attacker,
         label: `${attacker}: ${targetId}番へ侵攻`,
+        effect: "battle",
+        effectTitle: "BATTLE!",
+        effectDetail: `${attacker} 侵攻 ${targetId}番`,
         cells: [Number(targetId), ...entries.map((entry) => entry.from)],
         sources: entries.map((entry) => entry.from),
         targets: [Number(targetId)],
-        arrows: arrowsFromEntries(entries, "attack")
+        arrows: arrowsFromEntries(entries, "attack"),
+        duration: 1250
       });
 
       const defender = target.owner;
@@ -2556,10 +2634,14 @@
       addReplayEvent({
         kind: "front-collision",
         label: `${entry.from}-${entry.target} 正面衝突`,
+        effect: "battle",
+        effectTitle: "CLASH!",
+        effectDetail: `${entry.from}-${entry.target} 正面衝突`,
         cells: [entry.from, entry.target],
         sources: [entry.from, entry.target],
         targets: [entry.target, entry.from],
-        arrows: arrowsFromEntries([...sideA, ...sideB], "attack")
+        arrows: arrowsFromEntries([...sideA, ...sideB], "attack"),
+        duration: 1250
       });
 
       if (strengthA === strengthB) {
@@ -2600,6 +2682,19 @@
     target.pieces[defender] = 0;
     target.pieces[attacker] = Math.min(MAX_PIECES, survivors);
     messages.push(message);
+    if (target.id === 5) {
+      addReplayEvent({
+        kind: "center-capture",
+        player: attacker,
+        label: `${attacker}: 中央5番制圧`,
+        effect: "center",
+        effectTitle: "CENTER!",
+        effectDetail: `${attacker} 中央制圧`,
+        cells: [5],
+        targets: [5],
+        duration: 1400
+      });
+    }
   }
 
   function resolveDomesticActions(actions, messages, battleCells) {
@@ -2637,8 +2732,12 @@
             kind: "exploit",
             player: action.player,
             label: `${action.player}: ${action.from}番 開発 ${before}P→${source.value}P`,
+            effect: before < 3 && source.value >= 3 ? "city" : "",
+            effectTitle: before < 3 && source.value >= 3 ? "3P CITY!" : "",
+            effectDetail: before < 3 && source.value >= 3 ? `${action.player} ${action.from}番 都市化` : "",
             cells: [action.from],
-            targets: [action.from]
+            targets: [action.from],
+            duration: before < 3 && source.value >= 3 ? 1450 : undefined
           });
         }
 
@@ -2654,8 +2753,12 @@
             kind: "fortify",
             player: action.player,
             label: `${action.player}: ${action.from}番 要塞化`,
+            effect: "fortify",
+            effectTitle: "FORTRESS!",
+            effectDetail: `${action.player} ${action.from}番 要塞建築`,
             cells: [action.from],
-            targets: [action.from]
+            targets: [action.from],
+            duration: 1350
           });
         }
 
@@ -2698,14 +2801,29 @@
         const before = bonusCell.value;
         bonusCell.value = Math.min(3, bonusCell.value + 1);
         state.players[player].bingoUsed.push(line.id);
-        messages.push(`${player}の本拠接続ビンゴ${line.label}。中央マス${bonusId}番は${before}Pから${bonusCell.value}P。`);
+        messages.push(`BINGO! ${player}の本拠接続ビンゴ${line.label}。中央マス${bonusId}番は${before}Pから${bonusCell.value}P。`);
         addReplayEvent({
           kind: "bingo",
           player,
+          lineLabel: line.label,
           label: `${player}: ビンゴ ${line.label} / ${bonusId}番 ${before}P→${bonusCell.value}P`,
           cells: line.cells,
-          targets: [bonusId]
+          targets: [bonusId],
+          duration: 1700
         });
+        if (before < 3 && bonusCell.value >= 3) {
+          addReplayEvent({
+            kind: "city",
+            player,
+            label: `${player}: ${bonusId}番 3P都市化`,
+            effect: "city",
+            effectTitle: "3P CITY!",
+            effectDetail: `${player} ${bonusId}番 都市化`,
+            cells: [bonusId],
+            targets: [bonusId],
+            duration: 1450
+          });
+        }
       });
     });
   }
@@ -2750,8 +2868,12 @@
             kind: "produce-complete",
             player,
             label: `${player}: ${item.cell}番 生産完了`,
+            effect: "produce",
+            effectTitle: "UNIT +1",
+            effectDetail: `${player} ${item.cell}番 生産成功`,
             cells: [item.cell],
-            targets: [item.cell]
+            targets: [item.cell],
+            duration: 1300
           });
         } else {
           messages.push(`${player}の${item.cell}番生産予約は失敗。`);

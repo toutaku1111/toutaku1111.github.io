@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3x3x4X はじめての遊び方</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --ink: #1c2024;
+      --muted: #63706d;
+      --panel: #fffaf0;
+      --line: #d9d0bf;
+      --a: #b6404a;
+      --b: #10737d;
+      --gold: #b7791f;
+      --focus: #2d5a8a;
+      color-scheme: light;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .hero {
+      min-height: min(760px, 92vh);
+      display: grid;
+      align-items: end;
+      background:
+        linear-gradient(180deg, rgba(12, 15, 16, 0.18), rgba(12, 15, 16, 0.78)),
+        url("assets/intro-hero.png") center / cover no-repeat;
+      color: #fffaf0;
+    }
+
+    .hero-inner {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    .top-nav {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      width: min(1120px, calc(100vw - 32px));
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .button-link {
+      display: inline-grid;
+      place-items: center;
+      min-height: 38px;
+      border: 1px solid rgba(255, 250, 240, 0.58);
+      border-radius: 6px;
+      background: rgba(28, 32, 36, 0.34);
+      color: #fffaf0;
+      padding: 0 13px;
+      text-decoration: none;
+      font-weight: 850;
+      backdrop-filter: blur(8px);
+    }
+
+    .button-link.primary {
+      border-color: rgba(255, 250, 240, 0.72);
+      background: #fffaf0;
+      color: var(--ink);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: rgba(255, 250, 240, 0.76);
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 780px;
+      font-size: clamp(2.4rem, 7vw, 5.4rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 720px;
+      margin-top: 18px;
+      color: rgba(255, 250, 240, 0.9);
+      font-size: clamp(1rem, 2vw, 1.28rem);
+      font-weight: 700;
+      line-height: 1.75;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    main {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 34px 0 48px;
+    }
+
+    .intro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .guide-card,
+    .flow,
+    .closing {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 250, 240, 0.9);
+    }
+
+    .guide-card {
+      padding: 18px;
+    }
+
+    .guide-card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 10px;
+    }
+
+    .guide-card p {
+      color: #36413f;
+      font-size: 0.94rem;
+      font-weight: 650;
+      line-height: 1.7;
+    }
+
+    .flow {
+      margin-top: 18px;
+      padding: 20px;
+    }
+
+    .flow h2,
+    .closing h2 {
+      font-size: 1.22rem;
+      margin-bottom: 14px;
+    }
+
+    .turn-flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .turn-flow li {
+      min-height: 126px;
+      border: 1px solid rgba(99, 112, 109, 0.28);
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 14px;
+    }
+
+    .step-num {
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 900;
+      margin-bottom: 9px;
+    }
+
+    .turn-flow h3 {
+      font-size: 0.94rem;
+      margin-bottom: 6px;
+    }
+
+    .turn-flow p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .battle-note {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .note-panel {
+      min-height: 180px;
+      border-radius: 8px;
+      padding: 18px;
+      color: #fffaf0;
+    }
+
+    .note-panel.red {
+      background: linear-gradient(135deg, rgba(182, 64, 74, 0.95), rgba(42, 31, 30, 0.95));
+    }
+
+    .note-panel.blue {
+      background: linear-gradient(135deg, rgba(16, 115, 125, 0.95), rgba(25, 36, 42, 0.95));
+    }
+
+    .note-panel h2 {
+      margin-bottom: 10px;
+    }
+
+    .note-panel p {
+      color: rgba(255, 250, 240, 0.86);
+      font-weight: 700;
+      line-height: 1.7;
+    }
+
+    .closing {
+      display: grid;
+      grid-template-columns: 1.1fr auto;
+      gap: 16px;
+      align-items: center;
+      margin-top: 18px;
+      padding: 20px;
+    }
+
+    .closing p {
+      color: #36413f;
+      font-weight: 700;
+      line-height: 1.7;
+    }
+
+    .closing-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .closing .button-link {
+      border-color: var(--line);
+      background: #ffffff;
+      color: var(--ink);
+      backdrop-filter: none;
+    }
+
+    .closing .button-link.primary {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #ffffff;
+    }
+
+    @media (max-width: 900px) {
+      .intro-grid,
+      .turn-flow,
+      .battle-note,
+      .closing {
+        grid-template-columns: 1fr;
+      }
+
+      .closing-actions {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .top-nav {
+        justify-content: stretch;
+      }
+
+      .top-nav .button-link,
+      .hero-actions .button-link,
+      .closing-actions .button-link {
+        flex: 1;
+      }
+
+      .hero {
+        min-height: 86vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-nav" aria-label="ページ移動">
+    <a class="button-link" href="3x3x4x-rulebook.html">ルールブック</a>
+    <a class="button-link primary" href="index.html">プレイする</a>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">3x3x4X introduction</p>
+      <h1>小さな盤面で、先に勝ち筋を作る。</h1>
+      <p class="lead">
+        3×3×4Xは、3×3の土地を探索し、育て、奪い合う同時解決の戦略ゲームです。
+        相手の本拠地を落とすか、土地価値を伸ばすか。たった9マスでも、毎ターンの読み合いが濃くなります。
+      </p>
+      <div class="hero-actions">
+        <a class="button-link primary" href="index.html">すぐ遊ぶ</a>
+        <a class="button-link" href="index.html#tutorialButton">チュートリアルを見る</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro-grid" aria-label="ゲームの要点">
+      <article class="guide-card">
+        <h2>何をするゲーム？</h2>
+        <p>
+          自分の本拠地から周囲へ駒を出し、中立地を探索して支配地を広げます。
+          支配した土地は価値を持ち、後半の勝利点や資産収入につながります。
+        </p>
+      </article>
+      <article class="guide-card">
+        <h2>どこが面白い？</h2>
+        <p>
+          行動は同時に解決されます。中央を取る、相手の進路を読む、あえて内政するなど、
+          小さな選択が盤面全体の流れを変えます。
+        </p>
+      </article>
+      <article class="guide-card">
+        <h2>最初は何をする？</h2>
+        <p>
+          まずは本拠地から隣の中立地へ探索します。次に中央5番、ビンゴ列、3P都市のどれを狙うかを決めると遊びやすくなります。
+        </p>
+      </article>
+    </section>
+
+    <section class="flow" aria-label="1ターンの流れ">
+      <h2>1ターンの流れ</h2>
+      <ol class="turn-flow">
+        <li>
+          <span class="step-num">1</span>
+          <h3>行き先を決める</h3>
+          <p>自軍駒がある土地を起点に、探索・移動・侵攻などを予約します。</p>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <h3>同時に公開する</h3>
+          <p>両プレイヤーの行動をまとめて解決します。相手の一手も同時に動きます。</p>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <h3>盤面が変わる</h3>
+          <p>土地を取る、戦闘する、価値を伸ばす。結果はログとリプレイで確認できます。</p>
+        </li>
+        <li>
+          <span class="step-num">4</span>
+          <h3>次の狙いを作る</h3>
+          <p>中央、ビンゴ、敵本拠地、内政勝利。次の勝ち筋へ寄せます。</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="battle-note" aria-label="勝ち筋">
+      <article class="note-panel red">
+        <h2>攻めて勝つ</h2>
+        <p>
+          相手の本拠地を占領すれば即勝利です。要塞や包囲攻撃を使うと、少ない盤面でも一気に戦線が動きます。
+        </p>
+      </article>
+      <article class="note-panel blue">
+        <h2>育てて勝つ</h2>
+        <p>
+          土地を開発して価値を高め、11P以上の内政勝利を狙えます。3P都市や中央は生産拠点にもなる重要マスです。
+        </p>
+      </article>
+    </section>
+
+    <section class="closing" aria-label="次の行動">
+      <div>
+        <h2>まずはCPU相手に1ターンだけ。</h2>
+        <p>
+          B側をCPUにして、A本拠地から探索を出してみてください。
+          1ターン解決すると、駒が動き、次に狙う場所が見えてきます。
+        </p>
+      </div>
+      <div class="closing-actions">
+        <a class="button-link primary" href="index.html">プレイ画面へ</a>
+        <a class="button-link" href="3x3x4x-rulebook.html">詳しいルールへ</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
