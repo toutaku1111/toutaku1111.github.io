@@ -49,11 +49,22 @@
         </summary>
         <div class="panel-body board-body">
           <div class="board" id="board"></div>
+          <div class="replay-strip" aria-label="ターンリプレイ">
+            <div class="replay-info">
+              <strong>ターンリプレイ</strong>
+              <span id="replayStatus">まだリプレイはありません。</span>
+            </div>
+            <div class="replay-actions">
+              <button type="button" id="replayButton" disabled>再生</button>
+              <button type="button" id="skipReplayButton" disabled>スキップ</button>
+            </div>
+          </div>
           <div class="legend">
             <span><i class="legend-chip owner-a"></i>A支配</span>
             <span><i class="legend-chip owner-b"></i>B支配</span>
             <span><i class="legend-chip neutral"></i>中立</span>
-            <span><i class="legend-chip fort"></i>要塞</span>
+            <span><i class="legend-chip fort"></i>要塞（防衛+1/攻撃+1）</span>
+            <span><i class="legend-chip production"></i>生産拠点</span>
           </div>
         </div>
       </details>
@@ -81,9 +92,15 @@
           <ul class="quick-list">
             <li>起点に自軍駒がある行だけ入力します。</li>
             <li>1〜2ターン目は各プレイヤー1行動、3ターン目以降は駒1個につき1行動です。</li>
-            <li>有料行動を複数書く場合は、優先の数字が小さい順に資産を支払います。</li>
-            <li>対象が不要な 開発 / 要塞化 / 生産 は、対象欄を空のまま解決できます。</li>
+            <li>有料行動の支払い予定合計が資産を超える場合は、ターン解決前にエラーになります。</li>
+            <li>対象が不要な 開発 / 要塞化 / 生産 は、対象欄を空のまま解決できます。要塞化には3資産が必要で、本拠地は要塞化できません。</li>
+            <li>開発は3ターン目以降に解禁されます。1〜2ターン目は探索・移動で位置取りを行います。</li>
+            <li>生産は本拠地・中央都市国家・3P都市で実行できます。3P都市は、3P以上の自国支配地です。</li>
+            <li>要塞は資産・勝利点を生みませんが、防衛時+1、要塞から侵攻する時も攻撃側+1として扱います。</li>
             <li>本拠接続ビンゴ成立時は、成立した行・列の中央マスが+1Pされます。</li>
+            <li>ターン解決後、駒移動・侵攻矢印と変化マスのリプレイ演出が自動再生されます。</li>
+            <li>各プレイヤーの操作欄で「弱CPU」「ノーマルCPU」「軍師CPU」を選ぶと、ターン解決時にその陣営の行動をCPUが自動生成します。</li>
+            <li>両陣営をCPUにすると、CPU vs CPUの検証もできます。</li>
             <li>グレーの候補は、現在の盤面・資産・駒数では選べない行動です。</li>
           </ul>
           <p class="manual-link">

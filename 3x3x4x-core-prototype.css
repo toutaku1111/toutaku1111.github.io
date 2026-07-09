@@ -382,6 +382,22 @@ h3 {
     0 16px 32px rgba(0, 0, 0, 0.26);
 }
 
+
+.cell.production-site {
+  border-color: rgba(255, 225, 120, 0.98);
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 225, 120, 0.42),
+    inset 0 -18px 28px rgba(90, 60, 16, 0.16),
+    0 7px 0 rgba(119, 81, 29, 0.82),
+    0 0 26px rgba(255, 198, 71, 0.48),
+    0 16px 32px rgba(0, 0, 0, 0.26);
+}
+
+.cell.production-site::before {
+  border-color: rgba(255, 238, 160, 0.82);
+  box-shadow: inset 0 0 18px rgba(255, 230, 120, 0.18);
+}
+
 .cell.home-cell::after {
   content: "HQ";
   letter-spacing: 0;
@@ -447,6 +463,12 @@ h3 {
   font-size: 0.74rem;
   font-weight: 800;
   padding: 4px 7px;
+}
+
+
+.cell.production-site .tag {
+  background: rgba(255, 247, 199, 0.92);
+  color: #5b3b07;
 }
 
 .cell-main {
@@ -598,6 +620,12 @@ h3 {
 
 .legend-chip.neutral {
   background: var(--neutral);
+}
+
+
+.legend-chip.production {
+  background: linear-gradient(135deg, #ffe58a, #b7791f);
+  border: 1px solid rgba(255, 250, 240, 0.72);
 }
 
 .legend-chip.fort {
@@ -902,6 +930,285 @@ h3 {
   }
 
   .condition-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* --- Turn replay, arrows, and changed-cell effects --- */
+.board-body {
+  position: relative;
+}
+
+.board {
+  position: relative;
+}
+
+.board-arrow-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.board-arrow {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 2px rgba(28, 32, 36, 0.28));
+  animation: arrow-draw 720ms ease both;
+}
+
+.arrow-head {
+  stroke: none;
+  animation: arrow-pop 720ms ease both;
+}
+
+.arrow-A {
+  stroke: var(--a);
+  fill: var(--a);
+}
+
+.arrow-B {
+  stroke: var(--b);
+  fill: var(--b);
+}
+
+.arrow-explore {
+  stroke-dasharray: 4 2;
+}
+
+.arrow-attack {
+  stroke-width: 2.8;
+}
+
+.arrow-move {
+  opacity: 0.88;
+}
+
+.cell {
+  z-index: 1;
+}
+
+.cell-changed {
+  animation: changed-flash 1600ms ease both;
+}
+
+.changed-owner {
+  animation: owner-change 1400ms ease both;
+}
+
+.changed-value-up .value-label {
+  animation: value-up 1200ms ease both;
+}
+
+.changed-value-down .value-label {
+  animation: value-down 1200ms ease both;
+}
+
+.changed-pieces .piece-stack {
+  animation: piece-pop 1150ms ease both;
+}
+
+.changed-fort {
+  animation: fortify-flash 1400ms ease both;
+}
+
+.changed-neutral .value-label {
+  animation: neutral-pulse 1200ms ease both;
+}
+
+.replay-active {
+  z-index: 3;
+  transform: translateY(-2px) scale(1.015);
+  box-shadow: 0 0 0 4px rgba(183, 121, 31, 0.25), 0 12px 26px rgba(28, 32, 36, 0.14);
+}
+
+.replay-source {
+  border-color: rgba(45, 90, 138, 0.85);
+}
+
+.replay-target {
+  border-color: rgba(183, 121, 31, 0.95);
+}
+
+.replay-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.replay-info {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.replay-info strong {
+  font-size: 0.82rem;
+}
+
+.replay-info span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.replay-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@keyframes changed-flash {
+  0% { filter: brightness(1); }
+  18% { filter: brightness(1.24) saturate(1.12); outline-color: rgba(255, 230, 170, 0.86); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes owner-change {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.035); }
+  100% { transform: scale(1); }
+}
+
+@keyframes value-up {
+  0% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-5px) scale(1.18); text-shadow: 0 3px 0 rgba(183, 121, 31, 0.18); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes value-down {
+  0% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(4px) scale(0.94); color: var(--danger); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes piece-pop {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.16); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fortify-flash {
+  0% { filter: brightness(1); }
+  25% { filter: brightness(1.25) saturate(1.2); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes neutral-pulse {
+  0% { letter-spacing: 0; }
+  25% { letter-spacing: 1px; color: var(--danger); }
+  100% { letter-spacing: 0; }
+}
+
+@keyframes arrow-draw {
+  0% { opacity: 0; stroke-dasharray: 1 110; stroke-dashoffset: 110; }
+  18% { opacity: 1; }
+  100% { opacity: 1; stroke-dasharray: 110 0; stroke-dashoffset: 0; }
+}
+
+@keyframes arrow-pop {
+  0%, 48% { opacity: 0; transform: scale(0.7); transform-origin: center; }
+  100% { opacity: 1; transform: scale(1); transform-origin: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell,
+  .cell-changed,
+  .changed-owner,
+  .changed-value-up .value-label,
+  .changed-value-down .value-label,
+  .changed-pieces .piece-stack,
+  .changed-fort,
+  .changed-neutral .value-label,
+  .board-arrow,
+  .arrow-head {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .replay-strip {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .replay-actions button {
+    flex: 1;
+  }
+}
+
+/* CPU controls */
+.cpu-mode-pill {
+  border-color: rgba(45, 90, 138, 0.35);
+  background: rgba(45, 90, 138, 0.1);
+  color: var(--focus);
+}
+
+.cpu-personality-pill {
+  border-color: rgba(183, 121, 31, 0.36);
+  background: rgba(183, 121, 31, 0.12);
+  color: #8a5514;
+}
+
+.cpu-control-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 0 12px 10px;
+  border-top: 1px dashed rgba(99, 112, 109, 0.25);
+}
+
+.cpu-mode-field select {
+  min-height: 34px;
+}
+
+.cpu-mode-help {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.cpu-controlled-grid {
+  opacity: 0.76;
+}
+
+.plot-row.cpu-controlled-row {
+  position: relative;
+}
+
+.plot-row.cpu-controlled-row::after {
+  content: "CPU操作";
+  position: absolute;
+  right: 8px;
+  top: -2px;
+  border: 1px solid rgba(45, 90, 138, 0.22);
+  border-radius: 999px;
+  background: rgba(45, 90, 138, 0.1);
+  color: var(--focus);
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 2px 6px;
+}
+
+@media (max-width: 720px) {
+  .cpu-control-row {
     grid-template-columns: 1fr;
   }
 }
