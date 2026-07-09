@@ -80,6 +80,64 @@ button:disabled {
   font-weight: 700;
 }
 
+.tutorial-overlay[hidden] {
+  display: none;
+}
+
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.tutorial-card {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid rgba(28, 32, 36, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 250, 240, 0.98);
+  box-shadow: 0 18px 48px rgba(28, 32, 36, 0.26);
+  pointer-events: auto;
+}
+
+.tutorial-progress {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.tutorial-card h2 {
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.tutorial-card p {
+  color: #34403e;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+.tutorial-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tutorial-focus {
+  position: relative;
+  z-index: 45;
+  outline: 3px solid rgba(183, 121, 31, 0.9);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 8px rgba(183, 121, 31, 0.16), 0 18px 42px rgba(28, 32, 36, 0.18);
+}
+
 .app-shell {
   width: min(1680px, calc(100vw - 24px));
   margin: 0 auto;
@@ -113,6 +171,33 @@ p {
 h1 {
   font-size: clamp(1.55rem, 2vw, 2.1rem);
   line-height: 1.1;
+}
+
+.brand-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.intro-cta {
+  display: inline-grid;
+  place-items: center;
+  min-height: 34px;
+  border: 1px solid rgba(183, 121, 31, 0.55);
+  border-radius: 6px;
+  background: linear-gradient(135deg, #fff6dc, #ffffff);
+  color: #7a4a12;
+  padding: 0 12px;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(183, 121, 31, 0.16);
+}
+
+.intro-cta:hover {
+  border-color: var(--gold);
+  color: #5c370c;
 }
 
 h2 {
@@ -1143,6 +1228,21 @@ h3 {
 }
 
 @media (max-width: 640px) {
+  .tutorial-card {
+    right: 12px;
+    bottom: 12px;
+    width: calc(100vw - 24px);
+  }
+
+  .tutorial-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tutorial-actions button:last-child {
+    grid-column: 1 / -1;
+  }
+
   .replay-strip {
     align-items: stretch;
     flex-direction: column;

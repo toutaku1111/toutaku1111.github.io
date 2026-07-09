@@ -96,6 +96,34 @@
   };
   const CPU_PERSONALITY_KEYS = Object.keys(CPU_PERSONALITIES);
 
+  const TUTORIAL_STEPS = [
+    {
+      target: ".board-panel",
+      title: "まず盤面を見る",
+      body: "1番がA本拠地、9番がB本拠地です。中央5番やビンゴの列を取りに行くと、土地価値と展開が一気に動きます。"
+    },
+    {
+      target: ".control-panel",
+      title: "行動を予約する",
+      body: "起点、行動、対象、駒数を選びます。選べない行動はグレー表示なので、まずは本拠地から探索を出すだけで遊び始められます。"
+    },
+    {
+      target: "#resolveButton",
+      title: "同時に解決する",
+      body: "両プレイヤーの予約が入ったらターン解決です。相手も同時に動くので、中央の取り合い、侵攻、すれ違いが読み合いになります。"
+    },
+    {
+      target: ".replay-strip",
+      title: "結果を見る",
+      body: "解決後はリプレイとログで、どの駒がどこへ動いたかを確認できます。矢印と変化したマスを見ると次の一手が決めやすくなります。"
+    },
+    {
+      target: ".reference-panel",
+      title: "勝ち方を狙う",
+      body: "敵本拠地を落とす、土地価値11P以上を作る、10ターン後の判定で上回る。この3つのどれを狙うかがプレイの軸です。"
+    }
+  ];
+
 
   const els = {
     board: document.getElementById("board"),
@@ -110,7 +138,8 @@
     centralSeed: document.getElementById("centralSeed"),
     replayButton: document.getElementById("replayButton"),
     skipReplayButton: document.getElementById("skipReplayButton"),
-    replayStatus: document.getElementById("replayStatus")
+    replayStatus: document.getElementById("replayStatus"),
+    tutorialButton: document.getElementById("tutorialButton")
   };
 
   let state;
@@ -125,6 +154,8 @@
   let replayBusy = false;
   let replayEventSerial = 1;
   let turnReplayEvents = null;
+  let tutorialIndex = 0;
+  let tutorialOverlay = null;
 
   function opponent(player) {
     return player === "A" ? "B" : "A";
@@ -2864,14 +2895,96 @@
     }
   }
 
+  function ensureTutorialOverlay() {
+    if (tutorialOverlay) {
+      return tutorialOverlay;
+    }
+    tutorialOverlay = document.createElement("div");
+    tutorialOverlay.className = "tutorial-overlay";
+    tutorialOverlay.hidden = true;
+    tutorialOverlay.innerHTML = `
+      <section class="tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+        <div class="tutorial-progress" id="tutorialProgress"></div>
+        <h2 id="tutorialTitle"></h2>
+        <p id="tutorialBody"></p>
+        <div class="tutorial-actions">
+          <button type="button" data-tour-prev>戻る</button>
+          <button type="button" data-tour-next class="primary">次へ</button>
+          <button type="button" data-tour-close>閉じる</button>
+        </div>
+      </section>
+    `;
+    document.body.appendChild(tutorialOverlay);
+    tutorialOverlay.querySelector("[data-tour-prev]").addEventListener("click", () => showTutorialStep(tutorialIndex - 1));
+    tutorialOverlay.querySelector("[data-tour-next]").addEventListener("click", () => {
+      if (tutorialIndex >= TUTORIAL_STEPS.length - 1) {
+        closeTutorial();
+        return;
+      }
+      showTutorialStep(tutorialIndex + 1);
+    });
+    tutorialOverlay.querySelector("[data-tour-close]").addEventListener("click", closeTutorial);
+    return tutorialOverlay;
+  }
+
+  function startTutorial() {
+    stopReplay({ renderBoardOnly: true });
+    showTutorialStep(0);
+  }
+
+  function showTutorialStep(index) {
+    tutorialIndex = Math.max(0, Math.min(TUTORIAL_STEPS.length - 1, index));
+    const overlay = ensureTutorialOverlay();
+    const step = TUTORIAL_STEPS[tutorialIndex];
+    clearTutorialFocus();
+    const target = document.querySelector(step.target);
+    if (target) {
+      const parentDetails = target.closest("details");
+      if (parentDetails) {
+        parentDetails.open = true;
+      }
+      target.classList.add("tutorial-focus");
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+    overlay.hidden = false;
+    overlay.querySelector("#tutorialProgress").textContent = `${tutorialIndex + 1} / ${TUTORIAL_STEPS.length}`;
+    overlay.querySelector("#tutorialTitle").textContent = step.title;
+    overlay.querySelector("#tutorialBody").textContent = step.body;
+    overlay.querySelector("[data-tour-prev]").disabled = tutorialIndex === 0;
+    overlay.querySelector("[data-tour-next]").textContent = tutorialIndex === TUTORIAL_STEPS.length - 1 ? "完了" : "次へ";
+  }
+
+  function clearTutorialFocus() {
+    document.querySelectorAll(".tutorial-focus").forEach((element) => {
+      element.classList.remove("tutorial-focus");
+    });
+  }
+
+  function closeTutorial() {
+    clearTutorialFocus();
+    if (tutorialOverlay) {
+      tutorialOverlay.hidden = true;
+    }
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && tutorialOverlay && !tutorialOverlay.hidden) {
+      closeTutorial();
+    }
+  });
+
   els.resolveButton.addEventListener("click", resolveTurn);
   els.newGameButton.addEventListener("click", newGame);
   els.undoButton.addEventListener("click", undo);
   els.copyLogButton.addEventListener("click", copyLog);
   els.replayButton?.addEventListener("click", () => playReplay(lastReplayEvents));
   els.skipReplayButton?.addEventListener("click", () => stopReplay());
+  els.tutorialButton?.addEventListener("click", startTutorial);
   els.players.addEventListener("change", handlePlotInput);
   els.players.addEventListener("input", handlePlotInput);
 
   newGame();
+  if (location.hash === "#tutorialButton") {
+    requestAnimationFrame(startTutorial);
+  }
 })();
