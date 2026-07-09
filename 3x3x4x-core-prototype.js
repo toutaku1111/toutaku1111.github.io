@@ -35,6 +35,158 @@
     Produce: "生産",
     Move: "移動"
   };
+  const MAX_CARDS = 2;
+  const CARD_USE_COST = {
+    "CRD-001": 0,
+    "CRD-002": 1,
+    "CRD-003": 2,
+    "CRD-004": 2,
+    "CRD-005": 1,
+    "CRD-006": 2,
+    "CRD-007": 1,
+    "CRD-008": 0,
+    "CRD-009": 2,
+    "CRD-010": 1,
+    "CRD-011": 0,
+    "CRD-012": 2
+  };
+  const CARD_SET = [
+    {
+      id: "CRD-001",
+      name: "キャラバン宿",
+      icon: "路",
+      flavor: "交易路の休息地。荷馬車と噂が集まり、周囲の未踏地へ足が伸びる。",
+      useEffect: "自軍支配地1つを選ぶ。その土地から隣接する中立地への探索コストをこのターンだけ-1する。下限は0。",
+      landEffect: "この土地が2P以上なら、隣接する中立地1つの中立コストを-1する。下限は0。",
+      cost: "0資産",
+      assetNo: "AST-001"
+    },
+    {
+      id: "CRD-002",
+      name: "前線基地",
+      icon: "営",
+      flavor: "簡易な兵舎と物資置き場。兵が集まり、戦線を押し上げる足場になる。",
+      useEffect: "自軍支配地1つを選ぶ。その土地に自軍駒を1個追加する。駒上限は超えない。",
+      landEffect: "この土地が2P以上なら、この土地に自軍駒が1個以上ある場合に資産+1。",
+      cost: "1資産",
+      assetNo: "AST-002"
+    },
+    {
+      id: "CRD-003",
+      name: "厩舎",
+      icon: "馬",
+      flavor: "速い馬と騎手を抱える土地。攻め手の初速が上がる。",
+      useEffect: "このターン、自軍が行う最初の侵攻1つの攻撃側戦力を+1する。",
+      landEffect: "この土地が2P以上なら、この土地から行う侵攻の攻撃側戦力を+1する。",
+      cost: "2資産",
+      assetNo: "AST-003"
+    },
+    {
+      id: "CRD-004",
+      name: "砲兵陣地",
+      icon: "砲",
+      flavor: "丘に据えられた火砲の列。近づく敵に重い圧をかける。",
+      useEffect: "本拠地以外の自軍支配地1つを要塞化する。通常の要塞化条件を満たす必要がある。",
+      landEffect: "この土地が2P以上なら、この土地が攻撃された時の防衛側戦力を+1する。",
+      cost: "2資産",
+      assetNo: "AST-004"
+    },
+    {
+      id: "CRD-005",
+      name: "職人街",
+      icon: "工",
+      flavor: "石工、鍛冶、測量士が集まる街区。土地そのものの価値を底上げする。",
+      useEffect: "要塞化されていない自軍支配地1つの価値を+1する。上限は3P。",
+      landEffect: "この土地が2P以上なら、この土地が本拠地と接続している場合に資産+1。",
+      cost: "1資産",
+      assetNo: "AST-005"
+    },
+    {
+      id: "CRD-006",
+      name: "城塞都市",
+      icon: "城",
+      flavor: "壁に囲まれた中核都市。人と物資を抱え込み、部隊を送り出す。",
+      useEffect: "自軍の2P土地1つを3Pにする。対象は要塞化されていない土地に限る。",
+      landEffect: "この土地が2P以上なら、この土地を生産拠点として扱う。3P都市でなくても生産予約の対象にできる。",
+      cost: "2資産",
+      assetNo: "AST-006"
+    },
+    {
+      id: "CRD-007",
+      name: "道標の丘",
+      icon: "標",
+      flavor: "中央へ続く道を見下ろす高台。進軍路がはっきり見える。",
+      useEffect: "中央5番が中立なら中立コストを0にする。敵支配なら、このターン中央5番への侵攻コストを-1する。下限は1。",
+      landEffect: "この土地が2P以上なら、中央5番に対する自軍の探索または侵攻コストを-1する。下限は0または1。",
+      cost: "1資産",
+      assetNo: "AST-007"
+    },
+    {
+      id: "CRD-008",
+      name: "狼煙台",
+      icon: "煙",
+      flavor: "遠くの動きを煙で知らせる監視拠点。危険な境界が見えやすくなる。",
+      useEffect: "このターン、相手のカード利用予定を公開する。カード利用がない場合は「利用なし」と表示する。",
+      landEffect: "この土地が2P以上なら、隣接する敵支配地と中立地を強調表示する。資産効果はない。",
+      cost: "0資産",
+      assetNo: "AST-008"
+    },
+    {
+      id: "CRD-009",
+      name: "毒沼",
+      icon: "毒",
+      flavor: "泥と毒気に沈む湿地。支配はできるが、周囲の発展を鈍らせる。",
+      useEffect: "隣接する敵支配地1つを選ぶ。その土地の価値を1Pに下げる。ただし所有者は変わらない。",
+      landEffect: "この土地が2P以上なら、隣接する敵3P土地1つの価値を2Pに下げる。対象がない場合は効果なし。",
+      cost: "2資産",
+      assetNo: "AST-009"
+    },
+    {
+      id: "CRD-010",
+      name: "民兵屯所",
+      icon: "兵",
+      flavor: "住民が武器を取り、土地を守るための詰所。空いた守りを埋める。",
+      useEffect: "自軍本拠地または自軍支配地1つに自軍駒を1個追加する。駒上限は超えない。",
+      landEffect: "この土地が2P以上なら、この土地に自軍駒がない場合、自軍駒を1個置く。",
+      cost: "1資産",
+      assetNo: "AST-010"
+    },
+    {
+      id: "CRD-011",
+      name: "山道の関所",
+      icon: "関",
+      flavor: "尾根道を押さえる小さな関所。自軍だけが近道を使える。",
+      useEffect: "自軍駒1個を、自軍支配地を通って最大2マス移動する。通常の移動制限を満たす必要がある。",
+      landEffect: "この土地が2P以上なら、この土地からの移動距離上限を+1する。",
+      cost: "0資産",
+      assetNo: "AST-011"
+    },
+    {
+      id: "CRD-012",
+      name: "練兵場",
+      icon: "練",
+      flavor: "地面を踏み固めた演習地。次の衝突に向けて兵の呼吸が揃う。",
+      useEffect: "このターン、自軍が行う最初の戦闘で攻撃側または防衛側戦力を+1する。",
+      landEffect: "この土地が2P以上なら、この土地に隣接する敵支配地への侵攻コストを-1する。下限は1。",
+      cost: "2資産",
+      assetNo: "AST-012"
+    }
+  ];
+  const CARD_BY_ID = new Map(CARD_SET.map((card) => [card.id, card]));
+  const CARD_SCORE = {
+    "CRD-001": 22,
+    "CRD-002": 28,
+    "CRD-003": 24,
+    "CRD-004": 21,
+    "CRD-005": 30,
+    "CRD-006": 34,
+    "CRD-007": 26,
+    "CRD-008": 10,
+    "CRD-009": 25,
+    "CRD-010": 29,
+    "CRD-011": 20,
+    "CRD-012": 23
+  };
 
   const CONTROL_MODES = {
     human: "手動",
@@ -95,6 +247,15 @@
     }
   };
   const CPU_PERSONALITY_KEYS = Object.keys(CPU_PERSONALITIES);
+  const PHASE_STEPS = [
+    { key: "card-use", number: 1, label: "カード使用", note: "コマンド前" },
+    { key: "command", number: 2, label: "コマンド予約", note: "同時入力" },
+    { key: "resolve", number: 3, label: "ターン解決", note: "移動/戦闘" },
+    { key: "card-reserve", number: 4, label: "カード取得予約", note: "土地取得後" },
+    { key: "card-commit", number: 5, label: "同時確定", note: "全予約後" },
+    { key: "start", number: 6, label: "次ターン開始", note: "土地効果/資産" },
+    { key: "result", number: 7, label: "勝敗判定", note: "終了確認" }
+  ];
 
   const TUTORIAL_STEPS = [
     {
@@ -134,6 +295,7 @@
     undoButton: document.getElementById("undoButton"),
     copyLogButton: document.getElementById("copyLogButton"),
     logList: document.getElementById("logList"),
+    phaseRail: document.getElementById("phaseRail"),
     validationMessage: document.getElementById("validationMessage"),
     centralSeed: document.getElementById("centralSeed"),
     replayButton: document.getElementById("replayButton"),
@@ -156,6 +318,7 @@
   let turnReplayEvents = null;
   let tutorialIndex = 0;
   let tutorialOverlay = null;
+  let simulationDepth = 0;
 
   function opponent(player) {
     return player === "A" ? "B" : "A";
@@ -181,6 +344,8 @@
       value: 0,
       fort: false,
       neutralCost: 0,
+      traitCardId: null,
+      traitAssignedBy: null,
       pieces: { A: 0, B: 0 }
     };
   }
@@ -190,6 +355,16 @@
     return {
       die,
       cost: die <= 2 ? 0 : die <= 4 ? 1 : 2
+    };
+  }
+
+  function createTurnModifiers() {
+    return {
+      neutralDiscounts: [],
+      invasionDiscounts: [],
+      firstInvasionAttackBonus: { A: 0, B: 0 },
+      firstCombatBonus: { A: 0, B: 0 },
+      revealedCardUse: { A: false, B: false }
     };
   }
 
@@ -223,9 +398,16 @@
       result: "",
       cells,
       players: {
-        A: { assets: 0, pending: [], bingoUsed: [], personality: personalityA },
-        B: { assets: 0, pending: [], bingoUsed: [], personality: personalityB }
+        A: { assets: 0, pending: [], bingoUsed: [], personality: personalityA, cards: [] },
+        B: { assets: 0, pending: [], bingoUsed: [], personality: personalityB, cards: [] }
       },
+      cardChoices: [],
+      awaitingCardChoices: false,
+      cardUseReservations: {},
+      awaitingCardUse: false,
+      cardUseCommittedTurn: 0,
+      turnModifiers: createTurnModifiers(),
+      nextCardChoiceId: 1,
       log: [
         "ゲーム開始。",
         centralText,
@@ -283,14 +465,842 @@
     }
   }
 
+  function cardDefinition(cardId) {
+    return CARD_BY_ID.get(cardId) || null;
+  }
+
+  function playerCards(player) {
+    if (!state.players[player].cards) {
+      state.players[player].cards = [];
+    }
+    return state.players[player].cards;
+  }
+
+  function ensureCardUseState() {
+    if (!state.cardUseReservations) {
+      state.cardUseReservations = {};
+    }
+    if (typeof state.awaitingCardUse !== "boolean") {
+      state.awaitingCardUse = false;
+    }
+    if (typeof state.cardUseCommittedTurn !== "number") {
+      state.cardUseCommittedTurn = 0;
+    }
+    if (!state.turnModifiers) {
+      state.turnModifiers = createTurnModifiers();
+    }
+    state.turnModifiers.neutralDiscounts ||= [];
+    state.turnModifiers.invasionDiscounts ||= [];
+    state.turnModifiers.firstInvasionAttackBonus ||= { A: 0, B: 0 };
+    state.turnModifiers.firstCombatBonus ||= { A: 0, B: 0 };
+    state.turnModifiers.revealedCardUse ||= { A: false, B: false };
+  }
+
+  function cardUseCost(cardId) {
+    return CARD_USE_COST[cardId] ?? 0;
+  }
+
+  function findCardRecord(player, recordId) {
+    return playerCards(player).find((record) => record.id === recordId) || null;
+  }
+
+  function hasPendingCardUse() {
+    ensureCardUseState();
+    return Boolean(state.awaitingCardUse);
+  }
+
+  function cardUseReservation(player) {
+    ensureCardUseState();
+    return state.cardUseReservations[player] || null;
+  }
+
+  function allCardUsesReserved() {
+    ensureCardUseState();
+    return PLAYERS.every((player) => Boolean(state.cardUseReservations[player]));
+  }
+
+  function cardUseReservationSummary() {
+    ensureCardUseState();
+    const reserved = PLAYERS.filter((player) => state.cardUseReservations[player]).length;
+    return { reserved, total: PLAYERS.length };
+  }
+
+  function hasPendingCardChoices() {
+    return Boolean(state?.cardChoices?.length);
+  }
+
+  function pendingCardChoiceFor(player) {
+    return state.cardChoices?.find((choice) => choice.player === player && !choice.reservation)
+      || state.cardChoices?.find((choice) => choice.player === player)
+      || null;
+  }
+
+  function reservedNewCardCount(player, excludeChoiceId = null) {
+    return (state.cardChoices || []).filter((choice) => choice.player === player
+      && choice.id !== excludeChoiceId
+      && choice.reservation?.kind === "new").length;
+  }
+
+  function availableCardSlots(player, excludeChoiceId = null) {
+    return Math.max(0, MAX_CARDS - playerCards(player).length - reservedNewCardCount(player, excludeChoiceId));
+  }
+
+  function allCardChoicesReserved() {
+    return !hasPendingCardChoices() || state.cardChoices.every((choice) => Boolean(choice.reservation));
+  }
+
+  function reservationSummary(player) {
+    const choices = (state.cardChoices || []).filter((choice) => choice.player === player);
+    const reserved = choices.filter((choice) => choice.reservation).length;
+    return { choices, reserved };
+  }
+
+  function drawCardOptions(count = 3, exclude = []) {
+    const excluded = new Set(exclude.filter(Boolean));
+    const pool = CARD_SET.filter((card) => !excluded.has(card.id));
+    const shuffled = pool
+      .map((card) => ({ card, rank: Math.random() }))
+      .sort((left, right) => left.rank - right.rank)
+      .map((item) => item.card.id);
+    return shuffled.slice(0, Math.min(count, shuffled.length));
+  }
+
+  function cardRecord(player, cardId, cellId) {
+    return {
+      id: `${player}-${cardId}-${cellId}-${state.turn}-${state.nextCardChoiceId}`,
+      cardId,
+      cellId,
+      acquiredTurn: state.turn
+    };
+  }
+
+  function removePlayerCardForCell(player, cellId) {
+    if (!player || !state.players[player]?.cards) {
+      return;
+    }
+    state.players[player].cards = state.players[player].cards.filter((record) => record.cellId !== cellId);
+  }
+
+  function removePlayerCardRecord(player, recordId) {
+    if (!player || !state.players[player]?.cards) {
+      return null;
+    }
+    const removed = state.players[player].cards.find((record) => record.id === recordId) || null;
+    state.players[player].cards = state.players[player].cards.filter((record) => record.id !== recordId);
+    return removed;
+  }
+
+  function activeTrait(player, cellId, cardId = null) {
+    const current = state.cells?.[cellId];
+    if (!current || current.owner !== player || current.value < 2 || !current.traitCardId) {
+      return false;
+    }
+    return cardId ? current.traitCardId === cardId : true;
+  }
+
+  function activeTraitCells(player, cardId = null) {
+    return CELLS
+      .map((id) => cell(id))
+      .filter((current) => current.owner === player
+        && current.value >= 2
+        && current.traitCardId
+        && (!cardId || current.traitCardId === cardId));
+  }
+
+  function addAssets(player, amount) {
+    const before = state.players[player].assets;
+    state.players[player].assets = Math.min(MAX_ASSETS, before + amount);
+    return state.players[player].assets - before;
+  }
+
+  function registerLandAcquisition(player, cellId, messages, options = {}) {
+    if (simulationDepth > 0 || state.gameOver) {
+      return;
+    }
+    const current = cell(cellId);
+    if (!current || current.owner !== player) {
+      return;
+    }
+    const existingCardId = options.existingCardId || current.traitCardId || null;
+    const canGainNewCard = playerCards(player).length < MAX_CARDS;
+    if (!canGainNewCard) {
+      if (existingCardId) {
+        messages.push(`${player}はカード上限のため、${cellId}番の既存特性「${cardDefinition(existingCardId)?.name || existingCardId}」を維持。`);
+      } else {
+        messages.push(`${player}はカード上限${MAX_CARDS}枚のため、${cellId}番のカードを入手できない。`);
+      }
+      return;
+    }
+    const choice = {
+      id: state.nextCardChoiceId++,
+      player,
+      cellId,
+      mode: existingCardId ? "capture" : "new",
+      existingCardId,
+      options: drawCardOptions(3, [existingCardId])
+    };
+    state.cardChoices.push(choice);
+    messages.push(existingCardId
+      ? `${player}は${cellId}番を奪取。既存特性維持か新規カード3択を選べる。`
+      : `${player}は${cellId}番を取得。土地特性カード3択を選択待ち。`);
+  }
+
+  function chooseCardForCpu(choice) {
+    const current = cell(choice.cellId);
+    const options = choice.options
+      .map((cardId) => cardDefinition(cardId))
+      .filter(Boolean)
+      .sort((left, right) => cardScoreForLand(right, current, choice.player) - cardScoreForLand(left, current, choice.player));
+    return options[0]?.id || choice.options[0];
+  }
+
+  function cardScoreForLand(card, current, player) {
+    let score = CARD_SCORE[card.id] || 10;
+    if (!current) {
+      return score;
+    }
+    if (current.id === 5 && (card.id === "CRD-007" || card.id === "CRD-006")) score += 12;
+    if (current.value >= 2 && (card.id === "CRD-002" || card.id === "CRD-005")) score += 8;
+    if (current.value >= 3 && card.id === "CRD-006") score -= 8;
+    if (ADJACENT[current.id]?.some((id) => cell(id).owner === opponent(player))) {
+      if (card.id === "CRD-003" || card.id === "CRD-004" || card.id === "CRD-012" || card.id === "CRD-009") score += 10;
+    }
+    if (current.pieces[player] <= 0 && card.id === "CRD-010") score += 10;
+    return score;
+  }
+
+  function cardUseFields(cardId) {
+    if (cardId === "CRD-001") {
+      return [{ key: "source", label: "効果元" }];
+    }
+    if (cardId === "CRD-011") {
+      return [
+        { key: "from", label: "移動元" },
+        { key: "target", label: "移動先" }
+      ];
+    }
+    if (["CRD-002", "CRD-004", "CRD-005", "CRD-006", "CRD-009", "CRD-010"].includes(cardId)) {
+      return [{ key: "target", label: "対象" }];
+    }
+    return [];
+  }
+
+  function cardUseTargetInstruction(cardId) {
+    if (cardId === "CRD-001") return "探索コストを下げる起点を選択";
+    if (cardId === "CRD-002" || cardId === "CRD-010") return "駒を追加する自軍土地を選択";
+    if (cardId === "CRD-004") return "要塞化する自軍土地を選択";
+    if (cardId === "CRD-005") return "価値を+1する自軍土地を選択";
+    if (cardId === "CRD-006") return "3Pにする2P自軍土地を選択";
+    if (cardId === "CRD-009") return "価値を1Pに下げる隣接敵土地を選択";
+    if (cardId === "CRD-011") return "移動元と移動先を選択";
+    return "対象指定なし";
+  }
+
+  function cardUseFieldOptions(player, record, key, selected = {}) {
+    const cardId = record.cardId;
+    if (cardId === "CRD-001" && key === "source") {
+      return CELLS.filter((id) => cell(id).owner === player);
+    }
+    if ((cardId === "CRD-002" || cardId === "CRD-010") && key === "target") {
+      if (totalPieces(player) >= MAX_PIECES) {
+        return [];
+      }
+      return CELLS.filter((id) => {
+        const current = cell(id);
+        return current.owner === player && current.pieces[player] < MAX_PIECES;
+      });
+    }
+    if (cardId === "CRD-004" && key === "target") {
+      return CELLS.filter((id) => canCardFortifyTarget(player, id));
+    }
+    if (cardId === "CRD-005" && key === "target") {
+      return CELLS.filter((id) => {
+        const current = cell(id);
+        return current.owner === player && !current.fort && current.value > 0 && current.value < 3;
+      });
+    }
+    if (cardId === "CRD-006" && key === "target") {
+      return CELLS.filter((id) => {
+        const current = cell(id);
+        return current.owner === player && !current.fort && current.value === 2;
+      });
+    }
+    if (cardId === "CRD-009" && key === "target") {
+      return (ADJACENT[record.cellId] || []).filter((id) => cell(id).owner === opponent(player));
+    }
+    if (cardId === "CRD-011" && key === "from") {
+      return CELLS.filter((id) => {
+        const current = cell(id);
+        return current.owner === player && current.pieces[player] > 0;
+      });
+    }
+    if (cardId === "CRD-011" && key === "target") {
+      const from = Number(selected.from || 0);
+      return CELLS.filter((id) => {
+        const current = cell(id);
+        return id !== from
+          && current.owner === player
+          && current.pieces[player] < MAX_PIECES;
+      });
+    }
+    return [];
+  }
+
+  function cardUseTargetLabel(id, player) {
+    const current = cell(id);
+    const owner = current.owner || "中立";
+    const fort = current.fort ? "要塞" : "";
+    const pieces = current.owner ? ` 駒${current.pieces[current.owner]}` : ` C${current.neutralCost}`;
+    return `${id} ${owner}${current.value || ""}P${fort}${pieces}`;
+  }
+
+  function canCardFortifyTarget(player, id) {
+    if (id === HOME[player]) {
+      return false;
+    }
+    const current = cell(id);
+    return current.owner === player
+      && current.pieces[player] > 0
+      && !current.fort
+      && current.value > 0;
+  }
+
+  function normalizeCardUseReservation(player, reservation) {
+    if (!reservation || reservation.kind !== "use") {
+      return reservation || { kind: "skip", player };
+    }
+    const record = findCardRecord(player, reservation.recordId);
+    const targets = {};
+    cardUseFields(record?.cardId || reservation.cardId).forEach((field) => {
+      const value = Number(reservation.targets?.[field.key]);
+      if (CELLS.includes(value)) {
+        targets[field.key] = value;
+      }
+    });
+    return {
+      kind: "use",
+      player,
+      recordId: reservation.recordId,
+      cardId: record?.cardId || reservation.cardId,
+      cost: cardUseCost(record?.cardId || reservation.cardId),
+      targets
+    };
+  }
+
+  function validateCardUseReservation(player, reservation) {
+    ensureCardUseState();
+    if (!state.awaitingCardUse) {
+      return { ok: false, reason: "現在はカード使用フェイズではありません。" };
+    }
+    if (!reservation || reservation.kind === "skip") {
+      return { ok: true, reason: "" };
+    }
+    const normalized = normalizeCardUseReservation(player, reservation);
+    const record = findCardRecord(player, normalized.recordId);
+    const card = cardDefinition(normalized.cardId);
+    if (!record || !card) {
+      return { ok: false, reason: "使用できるカードがありません。" };
+    }
+    if (record.cardId !== card.id) {
+      return { ok: false, reason: "カード情報が一致しません。" };
+    }
+    const cardLand = cell(record.cellId);
+    if (!cardLand || cardLand.owner !== player) {
+      return { ok: false, reason: `${record.cellId}番を失っているため、そのカードは使用できません。` };
+    }
+    const cost = cardUseCost(card.id);
+    if (state.players[player].assets < cost) {
+      return { ok: false, reason: `資産が不足しています（必要${cost}）。` };
+    }
+
+    const target = Number(normalized.targets.target);
+    const source = Number(normalized.targets.source);
+    const from = Number(normalized.targets.from);
+    if (card.id === "CRD-001") {
+      return cell(source)?.owner === player
+        ? { ok: true, reason: "" }
+        : { ok: false, reason: "自軍支配地を選んでください。" };
+    }
+    if (card.id === "CRD-002" || card.id === "CRD-010") {
+      const current = cell(target);
+      return current?.owner === player && current.pieces[player] < MAX_PIECES && totalPieces(player) < MAX_PIECES
+        ? { ok: true, reason: "" }
+        : { ok: false, reason: "自軍駒を追加できる自軍支配地を選んでください。" };
+    }
+    if (card.id === "CRD-004") {
+      return canCardFortifyTarget(player, target)
+        ? { ok: true, reason: "" }
+        : { ok: false, reason: "要塞化できる自軍支配地を選んでください。" };
+    }
+    if (card.id === "CRD-005") {
+      const current = cell(target);
+      return current?.owner === player && !current.fort && current.value > 0 && current.value < 3
+        ? { ok: true, reason: "" }
+        : { ok: false, reason: "価値を上げられる未要塞の自軍支配地を選んでください。" };
+    }
+    if (card.id === "CRD-006") {
+      const current = cell(target);
+      return current?.owner === player && !current.fort && current.value === 2
+        ? { ok: true, reason: "" }
+        : { ok: false, reason: "3Pにできる2P・未要塞の自軍支配地を選んでください。" };
+    }
+    if (card.id === "CRD-009") {
+      const current = cell(target);
+      return current?.owner === opponent(player) && ADJACENT[record.cellId]?.includes(target)
+        ? { ok: true, reason: "" }
+        : { ok: false, reason: "カードの土地に隣接する敵支配地を選んでください。" };
+    }
+    if (card.id === "CRD-011") {
+      const sourceCell = cell(from);
+      const targetCell = cell(target);
+      return from !== target
+        && sourceCell?.owner === player
+        && sourceCell.pieces[player] > 0
+        && targetCell?.owner === player
+        && targetCell.pieces[player] < MAX_PIECES
+        && pathWithinDistance(player, from, target, 2)
+        ? { ok: true, reason: "" }
+        : { ok: false, reason: "自軍支配地を通る2マス以内の移動先を選んでください。" };
+    }
+    return { ok: true, reason: "" };
+  }
+
+  function cardUseTargetCombinations(player, record) {
+    const fields = cardUseFields(record.cardId);
+    if (fields.length === 0) {
+      return [{}];
+    }
+    if (record.cardId === "CRD-011") {
+      const combinations = [];
+      cardUseFieldOptions(player, record, "from").forEach((from) => {
+        cardUseFieldOptions(player, record, "target", { from }).forEach((target) => {
+          combinations.push({ from, target });
+        });
+      });
+      return combinations;
+    }
+    const field = fields[0];
+    return cardUseFieldOptions(player, record, field.key).map((id) => ({ [field.key]: id }));
+  }
+
+  function legalCardUseReservations(player) {
+    const reservations = [];
+    playerCards(player).forEach((record) => {
+      const card = cardDefinition(record.cardId);
+      if (!card || state.players[player].assets < cardUseCost(card.id)) {
+        return;
+      }
+      cardUseTargetCombinations(player, record).forEach((targets) => {
+        const reservation = normalizeCardUseReservation(player, {
+          kind: "use",
+          recordId: record.id,
+          cardId: record.cardId,
+          targets
+        });
+        if (validateCardUseReservation(player, reservation).ok) {
+          reservations.push(reservation);
+        }
+      });
+    });
+    return reservations;
+  }
+
+  function cardUseHeuristic(player, reservation) {
+    const card = cardDefinition(reservation.cardId);
+    if (!card) {
+      return -Infinity;
+    }
+    const enemy = opponent(player);
+    const target = reservation.targets?.target ? cell(reservation.targets.target) : null;
+    let score = (CARD_SCORE[card.id] || 10) * 0.35 - cardUseCost(card.id) * 12;
+    if (card.id === "CRD-001") {
+      const source = cell(reservation.targets.source);
+      const bestNeutral = source ? ADJACENT[source.id].filter((id) => cell(id).owner === null && cell(id).neutralCost > 0).length : 0;
+      score += bestNeutral > 0 ? 22 : -12;
+    }
+    if (card.id === "CRD-002" || card.id === "CRD-010") {
+      score += totalPieces(player) < totalPieces(enemy) ? 42 : 18;
+      if (target && ADJACENT[target.id].some((id) => cell(id).owner === enemy)) score += 18;
+    }
+    if (card.id === "CRD-003" || card.id === "CRD-012") {
+      score += legalActionCandidates(player).some((action) => action.type === "Exterminate") ? 44 : -10;
+    }
+    if (card.id === "CRD-004" && target) {
+      score += fortressActionUtility(player, target.id) + 18;
+    }
+    if (card.id === "CRD-005" && target) {
+      score += target.value === 2 ? 42 : 24;
+      if (target.id === HOME[player] || target.id === 5) score += 18;
+    }
+    if (card.id === "CRD-006" && target) {
+      score += 52;
+      if (target.id === 5) score += 18;
+    }
+    if (card.id === "CRD-007") {
+      const center = cell(5);
+      score += center.owner === null && center.neutralCost > 0 ? 42 : center.owner === enemy ? 32 : -18;
+    }
+    if (card.id === "CRD-008") {
+      score += 4;
+    }
+    if (card.id === "CRD-009" && target) {
+      score += target.value * 18 + (target.id === HOME[enemy] || target.id === 5 ? 20 : 0);
+    }
+    return score;
+  }
+
+  function chooseCardUseForCpu(player) {
+    const candidates = legalCardUseReservations(player)
+      .map((reservation) => ({ reservation, score: cardUseHeuristic(player, reservation) }))
+      .sort((left, right) => right.score - left.score);
+    const best = candidates[0];
+    return best && best.score > 12 ? best.reservation : { kind: "skip", player };
+  }
+
+  function reserveCardUse(player, reservation, messages, options = {}) {
+    ensureCardUseState();
+    if (!state.awaitingCardUse || !PLAYERS.includes(player) || state.cardUseReservations[player]) {
+      return false;
+    }
+    if (!reservation || reservation.kind === "skip") {
+      state.cardUseReservations[player] = {
+        kind: "skip",
+        player,
+        autoNoCard: Boolean(options.autoNoCard)
+      };
+      if (!options.silent) {
+        messages.push(`${player}はカード使用予約を完了。`);
+      }
+      return true;
+    }
+
+    const normalized = normalizeCardUseReservation(player, reservation);
+    const validation = validateCardUseReservation(player, normalized);
+    if (!validation.ok) {
+      messages.push(validation.reason);
+      return false;
+    }
+    state.cardUseReservations[player] = normalized;
+    if (!options.silent) {
+      messages.push(`${player}はカード使用予約を完了。`);
+    }
+    return true;
+  }
+
+  function autoResolveCpuCardUses(messages) {
+    ensureCardUseState();
+    if (!state.awaitingCardUse) {
+      return;
+    }
+    PLAYERS.forEach((player) => {
+      if (state.cardUseReservations[player]) {
+        return;
+      }
+      if (playerCards(player).length === 0) {
+        reserveCardUse(player, { kind: "skip" }, messages, { silent: true, autoNoCard: true });
+        return;
+      }
+      if (isCpuPlayer(player)) {
+        reserveCardUse(player, chooseCardUseForCpu(player), messages, { silent: false });
+      }
+    });
+  }
+
+  function beginCardUsePhase(messages) {
+    ensureCardUseState();
+    state.cardUseReservations = {};
+    if (!PLAYERS.some((player) => playerCards(player).length > 0)) {
+      state.awaitingCardUse = false;
+      state.cardUseCommittedTurn = state.turn;
+      return false;
+    }
+    state.awaitingCardUse = true;
+    autoResolveCpuCardUses(messages);
+    if (finishCardUsePhase(messages)) {
+      return true;
+    }
+    messages.push("カード使用予約待ち。全員の予約後、同時公開してコマンド予約に進みます。");
+    return true;
+  }
+
+  function finishCardUsePhase(messages) {
+    ensureCardUseState();
+    if (!state.awaitingCardUse || !allCardUsesReserved()) {
+      return false;
+    }
+    commitCardUseReservations(messages);
+    state.awaitingCardUse = false;
+    state.cardUseCommittedTurn = state.turn;
+    state.cardUseReservations = {};
+    return true;
+  }
+
+  function commitCardUseReservations(messages) {
+    ensureCardUseState();
+    messages.push("カード使用予約を同時公開。");
+    const paidUses = [];
+    PLAYERS.forEach((player) => {
+      const reservation = state.cardUseReservations[player] || { kind: "skip", player, autoNoCard: true };
+      if (reservation.kind !== "use") {
+        if (!reservation.autoNoCard) {
+          messages.push(`${player}はカード使用なし。`);
+        }
+        return;
+      }
+      const card = cardDefinition(reservation.cardId);
+      const validation = validateCardUseReservation(player, reservation);
+      if (!card || !validation.ok) {
+        messages.push(`${player}のカード使用は失敗。${validation.reason || ""}`);
+        return;
+      }
+      const cost = cardUseCost(card.id);
+      if (state.players[player].assets < cost) {
+        messages.push(`${player}は資産不足で「${card.name}」を使用できない。`);
+        return;
+      }
+      state.players[player].assets -= cost;
+      paidUses.push(reservation);
+      messages.push(cost > 0
+        ? `${player}は${cost}資産を支払い「${card.name}」を使用。`
+        : `${player}は「${card.name}」を使用。`);
+    });
+    paidUses.forEach((reservation) => applyCardUseEffect(reservation, messages, paidUses));
+    paidUses.forEach((reservation) => discardUsedCard(reservation, messages));
+    PLAYERS.forEach(capAssets);
+  }
+
+  function discardUsedCard(reservation, messages) {
+    const card = cardDefinition(reservation.cardId);
+    const removed = removePlayerCardRecord(reservation.player, reservation.recordId);
+    if (card && removed) {
+      messages.push(`${reservation.player}の「${card.name}」は使用済みとなり、手札一覧から除外。`);
+    }
+  }
+
+  function applyCardUseEffect(reservation, messages, allUses = []) {
+    const player = reservation.player;
+    const card = cardDefinition(reservation.cardId);
+    const record = findCardRecord(player, reservation.recordId);
+    const targets = reservation.targets || {};
+    if (!card || !record) {
+      return;
+    }
+    if (card.id === "CRD-001") {
+      const source = cell(targets.source);
+      state.turnModifiers.neutralDiscounts.push({ player, from: source.id, amount: 1 });
+      messages.push(`${player}の「${card.name}」: このターン、${source.id}番から隣接中立地への探索コスト-1。`);
+      addCardUseReplay(player, card, [source.id], "CARD USE", `${source.id}番 探索支援`);
+      return;
+    }
+    if (card.id === "CRD-002" || card.id === "CRD-010") {
+      const target = cell(targets.target);
+      if (target && totalPieces(player) < MAX_PIECES && target.pieces[player] < MAX_PIECES) {
+        target.pieces[player] += 1;
+        messages.push(`${player}の「${card.name}」: ${target.id}番に1駒追加。`);
+        addCardUseReplay(player, card, [target.id], "UNIT +1", `${player} ${target.id}番`);
+      }
+      return;
+    }
+    if (card.id === "CRD-003") {
+      state.turnModifiers.firstInvasionAttackBonus[player] += 1;
+      messages.push(`${player}の「${card.name}」: このターン最初の侵攻攻撃側戦力+1。`);
+      addCardUseReplay(player, card, [record.cellId], "CHARGE +1", `${player} 初回侵攻`);
+      return;
+    }
+    if (card.id === "CRD-004") {
+      const target = cell(targets.target);
+      if (target && canCardFortifyTarget(player, target.id)) {
+        target.fort = true;
+        messages.push(`${player}の「${card.name}」: ${target.id}番を要塞化。`);
+        addCardUseReplay(player, card, [target.id], "FORTRESS!", `${player} ${target.id}番`);
+      }
+      return;
+    }
+    if (card.id === "CRD-005" || card.id === "CRD-006") {
+      const target = cell(targets.target);
+      if (target && target.owner === player && !target.fort) {
+        const before = target.value;
+        target.value = card.id === "CRD-006" ? Math.max(target.value, 3) : Math.min(3, target.value + 1);
+        messages.push(`${player}の「${card.name}」: ${target.id}番${before}P→${target.value}P。`);
+        addCardUseReplay(
+          player,
+          card,
+          [target.id],
+          target.value >= 3 && before < 3 ? "3P CITY!" : "VALUE +1",
+          `${player} ${target.id}番`
+        );
+      }
+      return;
+    }
+    if (card.id === "CRD-007") {
+      const center = cell(5);
+      if (center.owner === null) {
+        const before = center.neutralCost;
+        center.neutralCost = 0;
+        messages.push(`${player}の「${card.name}」: 中央5番の中立コスト${before}→0。`);
+      } else if (center.owner === opponent(player)) {
+        state.turnModifiers.invasionDiscounts.push({ player, target: 5, amount: 1 });
+        messages.push(`${player}の「${card.name}」: このターン中央5番への侵攻コスト-1。`);
+      } else {
+        messages.push(`${player}の「${card.name}」: 中央5番は自軍支配のため効果なし。`);
+      }
+      addCardUseReplay(player, card, [5], "CENTER ROUTE", `${player} 中央圧力`);
+      return;
+    }
+    if (card.id === "CRD-008") {
+      const enemy = opponent(player);
+      state.turnModifiers.revealedCardUse[player] = true;
+      const enemyUse = allUses.find((item) => item.player === enemy);
+      const enemyCard = enemyUse ? cardDefinition(enemyUse.cardId) : null;
+      messages.push(`${player}の「${card.name}」: ${enemy}のカード使用予定は${enemyCard ? `「${enemyCard.name}」` : "使用なし"}。`);
+      addCardUseReplay(player, card, [record.cellId], "SIGNAL", `${player} 情報公開`);
+      return;
+    }
+    if (card.id === "CRD-009") {
+      const target = cell(targets.target);
+      if (target && target.owner === opponent(player)) {
+        const before = target.value;
+        target.value = 1;
+        messages.push(`${player}の「${card.name}」: ${target.id}番${before}P→1P。`);
+        addCardUseReplay(player, card, [target.id], "WITHER", `${target.id}番 価値低下`);
+      }
+      return;
+    }
+    if (card.id === "CRD-011") {
+      const source = cell(targets.from);
+      const target = cell(targets.target);
+      if (source && target && source.pieces[player] > 0 && target.pieces[player] < MAX_PIECES) {
+        source.pieces[player] -= 1;
+        target.pieces[player] += 1;
+        messages.push(`${player}の「${card.name}」: 1駒を${source.id}番から${target.id}番へ再配置。`);
+        addCardUseReplay(player, card, [source.id, target.id], "REDEPLOY", `${source.id}→${target.id}`);
+      }
+      return;
+    }
+    if (card.id === "CRD-012") {
+      state.turnModifiers.firstCombatBonus[player] += 1;
+      messages.push(`${player}の「${card.name}」: このターン最初の戦闘で戦力+1。`);
+      addCardUseReplay(player, card, [record.cellId], "BATTLE +1", `${player} 初回戦闘`);
+    }
+  }
+
+  function addCardUseReplay(player, card, cells, title, detail) {
+    addReplayEvent({
+      kind: "card-use",
+      player,
+      label: `${player}: ${card.name}`,
+      effect: "card",
+      effectTitle: title,
+      effectDetail: detail,
+      cells,
+      targets: cells.slice(-1),
+      duration: 1200
+    });
+  }
+
+  function autoResolveCpuCardChoices(messages) {
+    let resolved = true;
+    while (resolved) {
+      resolved = false;
+      const choice = state.cardChoices.find((item) => isCpuPlayer(item.player) && !item.reservation);
+      if (!choice) {
+        break;
+      }
+      if (availableCardSlots(choice.player, choice.id) <= 0) {
+        reserveCardChoice(choice.id, choice.existingCardId ? { kind: "keep" } : { kind: "skip" }, messages);
+      } else {
+        reserveCardChoice(choice.id, { kind: "new", cardId: chooseCardForCpu(choice) }, messages);
+      }
+      resolved = true;
+    }
+  }
+
+  function reserveCardChoice(choiceId, reservation, messages) {
+    const choice = state.cardChoices.find((item) => item.id === Number(choiceId));
+    if (!choice) {
+      return false;
+    }
+    const current = cell(choice.cellId);
+    if (!current || current.owner !== choice.player) {
+      messages.push(`${choice.cellId}番の所有者が変わったため、カード取得予約は破棄された。`);
+      choice.reservation = { kind: "skip" };
+      return true;
+    }
+
+    if (reservation.kind === "keep") {
+      choice.reservation = { kind: "keep" };
+      messages.push(`${choice.player}は${choice.cellId}番の既存特性維持を予約。`);
+      return true;
+    }
+
+    if (reservation.kind === "skip" || availableCardSlots(choice.player, choice.id) <= 0) {
+      choice.reservation = { kind: choice.existingCardId ? "keep" : "skip" };
+      messages.push(`${choice.player}は${choice.cellId}番のカード取得なしを予約。`);
+      return true;
+    }
+
+    const card = cardDefinition(reservation.cardId);
+    if (!card || !choice.options.includes(card.id)) {
+      return false;
+    }
+
+    choice.reservation = { kind: "new", cardId: card.id };
+    messages.push(`${choice.player}は${choice.cellId}番のカード取得を予約。`);
+    return true;
+  }
+
+  function commitReservedCardChoices(messages) {
+    if (!hasPendingCardChoices() || !allCardChoicesReserved()) {
+      return false;
+    }
+    const choices = state.cardChoices.slice();
+    state.cardChoices = [];
+    choices.forEach((choice) => applyReservedCardChoice(choice, messages));
+    return true;
+  }
+
+  function applyReservedCardChoice(choice, messages) {
+    const current = cell(choice.cellId);
+    if (!current || current.owner !== choice.player) {
+      messages.push(`${choice.cellId}番の所有者が変わったため、カード取得予約は破棄された。`);
+      return;
+    }
+
+    const reservation = choice.reservation || { kind: "skip" };
+    if (reservation.kind === "keep") {
+      const existing = cardDefinition(choice.existingCardId);
+      messages.push(`${choice.player}は${choice.cellId}番の既存特性「${existing?.name || "不明"}」を維持。カード入手なし。`);
+      return;
+    }
+    if (reservation.kind !== "new") {
+      messages.push(`${choice.player}は${choice.cellId}番のカードを入手しない。`);
+      return;
+    }
+
+    const card = cardDefinition(reservation.cardId);
+    if (!card || playerCards(choice.player).length >= MAX_CARDS) {
+      messages.push(`${choice.player}はカード上限${MAX_CARDS}枚のため、${choice.cellId}番のカードを入手できない。`);
+      return;
+    }
+
+    current.traitCardId = card.id;
+    current.traitAssignedBy = choice.player;
+    removePlayerCardForCell(choice.player, choice.cellId);
+    playerCards(choice.player).push(cardRecord(choice.player, card.id, choice.cellId));
+    messages.push(`${choice.player}は${choice.cellId}番に土地特性「${card.name}」を同時確定。カード${playerCards(choice.player).length}/${MAX_CARDS}。`);
+  }
+
   function render() {
+    ensureCardUseState();
     renderSummary();
     renderBoard();
     renderPlayers();
     updatePlotAvailability();
+    updateCardUseAvailability();
     renderLog();
+    renderPhaseRail();
     updateReplayControls();
-    els.resolveButton.disabled = state.gameOver || replayBusy;
+    els.resolveButton.disabled = state.gameOver || replayBusy || hasPendingCardChoices() || hasPendingCardUse();
     els.undoButton.disabled = history.length === 0 || replayBusy;
     refreshValidationMessage();
   }
@@ -330,6 +1340,10 @@
       if (productionLabel) {
         square.classList.add("production-site");
       }
+      const trait = cardDefinition(current.traitCardId);
+      if (trait) {
+        square.classList.add("trait-cell");
+      }
       applyVisualClasses(square, id);
 
       const tags = [];
@@ -340,13 +1354,16 @@
       if (productionLabel) tags.push("生産可");
       if (current.fort) tags.push("要塞");
       if (current.fort) tags.push("攻防+1");
+      if (trait) tags.push(trait.name);
 
       const value = current.owner
         ? `${current.value}P`
         : `C${current.neutralCost}`;
       const ownerText = current.owner ? `${current.owner}支配` : "中立";
       const foot = current.owner
-        ? productionLabel || (current.fort ? `${current.value}P要塞・攻防+1` : "通常土地")
+        ? trait
+          ? `土地特性: ${trait.name}${current.value >= 2 ? " 発動中" : " 休眠"}`
+          : productionLabel || (current.fort ? `${current.value}P要塞・攻防+1` : "通常土地")
         : current.neutralCost > 0 ? "中立コストあり" : "開放中立地";
 
       square.innerHTML = `
@@ -358,6 +1375,7 @@
           <span class="owner-label ${owner}">${ownerText}</span>
           <span class="value-label">${value}</span>
           <div class="pieces">${renderPieceStack("A", current.pieces.A)}${renderPieceStack("B", current.pieces.B)}</div>
+          ${trait ? renderLandTraitBadge(trait, current.value >= 2) : ""}
         </div>
         <div class="cell-foot">${foot}</div>
       `;
@@ -517,6 +1535,15 @@
     return `<span class="piece-stack ${player}">${soldiers}<span>${player}x${count}</span></span>`;
   }
 
+  function renderLandTraitBadge(trait, active) {
+    return `
+      <div class="land-trait ${active ? "active" : "inactive"}" title="${trait.landEffect}">
+        <span class="trait-icon">${trait.icon}</span>
+        <span>${trait.name}</span>
+      </div>
+    `;
+  }
+
   function renderSoldierIcon(player) {
     return `
       <svg class="piece-soldier ${player}" viewBox="0 0 32 42" aria-hidden="true" focusable="false">
@@ -547,6 +1574,7 @@
             <span class="stat-pill">資産 ${state.players[player].assets}/3</span>
             <span class="stat-pill">駒 ${totalPieces(player)}/3</span>
             <span class="stat-pill">行動枠 ${actionLimit(player)}</span>
+            <span class="stat-pill">カード ${playerCards(player).length}/2</span>
             <span class="stat-pill">予約 ${pending}</span>
             <span class="stat-pill cpu-mode-pill">${CONTROL_MODES[controlModes[player]]}</span>
             <span class="stat-pill cpu-personality-pill">性格 ${cpuPersonalityLabel(player)}</span>
@@ -561,12 +1589,274 @@
           </label>
           <p class="cpu-mode-help">${controlModes[player] === "human" ? `手動で行動を入力します。CPUに切り替えた場合は${cpuPersonalityLabel(player)}として動きます。` : `${cpuPersonalityLabel(player)}: ${cpuPersonality(player).description}`}</p>
         </div>
+        ${renderCardUsePanel(player)}
+        ${renderPlayerCardArea(player)}
+        ${renderCardChoicePanel(player)}
         <div class="plot-grid ${controlModes[player] !== "human" ? "cpu-controlled-grid" : ""}" data-player="${player}">
           ${[0, 1, 2].map((index) => renderPlotRow(player, index)).join("")}
         </div>
       `;
       els.players.appendChild(card);
     });
+  }
+
+  function renderPlayerCardArea(player) {
+    const records = playerCards(player);
+    const cards = records.map((record) => {
+      const card = cardDefinition(record.cardId);
+      if (!card) {
+        return "";
+      }
+      return `
+        <article class="held-card" title="${card.landEffect}">
+          <div class="held-card-top">
+            <span class="trait-icon">${card.icon}</span>
+            <strong>${card.name}</strong>
+            <span>${record.cellId}番</span>
+          </div>
+          <p>${card.flavor}</p>
+        </article>
+      `;
+    }).join("");
+    return `
+      <section class="public-cards" aria-label="プレイヤー${player}の公開カード">
+        <div class="mini-heading">
+          <strong>公開カード</strong>
+          <span>${records.length}/${MAX_CARDS}</span>
+        </div>
+        <div class="held-card-grid">
+          ${cards || `<p class="empty-card-note">まだカードなし</p>`}
+        </div>
+      </section>
+    `;
+  }
+
+  function renderCardUsePanel(player) {
+    if (!hasPendingCardUse()) {
+      return "";
+    }
+    const records = playerCards(player);
+    const reservation = cardUseReservation(player);
+    const summary = cardUseReservationSummary();
+    if (reservation) {
+      return `
+        <section class="card-use-panel reserved">
+          <div class="mini-heading">
+            <strong>カード使用予約済み</strong>
+            <span>${summary.reserved}/${summary.total}</span>
+          </div>
+          <p class="choice-reserved-note">全員の予約が揃うと同時に公開・解決します。</p>
+        </section>
+      `;
+    }
+    if (records.length === 0) {
+      return `
+        <section class="card-use-panel reserved">
+          <div class="mini-heading">
+            <strong>カード使用なし</strong>
+            <span>${summary.reserved}/${summary.total}</span>
+          </div>
+          <p class="choice-reserved-note">使用できるカードがないため自動で予約されます。</p>
+        </section>
+      `;
+    }
+    if (isCpuPlayer(player)) {
+      return `
+        <section class="card-use-panel reserved">
+          <div class="mini-heading">
+            <strong>CPUカード使用予約</strong>
+            <span>${summary.reserved}/${summary.total}</span>
+          </div>
+          <p class="choice-reserved-note">CPUがカード使用を自動予約します。</p>
+        </section>
+      `;
+    }
+
+    const cards = records.map((record) => renderCardUseCard(player, record)).join("");
+    return `
+      <section class="card-use-panel" data-card-use-panel="${player}">
+        <div class="mini-heading">
+          <strong>カード使用予約</strong>
+          <span>${summary.reserved}/${summary.total}予約 / ターン1枚</span>
+        </div>
+        <div class="use-card-grid">
+          ${cards}
+        </div>
+        <button type="button" class="skip-card-button" data-card-use-skip="${player}">
+          カードを使用しないで予約
+        </button>
+      </section>
+    `;
+  }
+
+  function renderCardUseCard(player, record) {
+    const card = cardDefinition(record.cardId);
+    if (!card) {
+      return "";
+    }
+    const cost = cardUseCost(card.id);
+    return `
+      <article class="use-card" data-card-use-card="${record.id}" data-card-use-player="${player}">
+        <div class="held-card-top">
+          <span class="trait-icon">${card.icon}</span>
+          <strong>${card.name}</strong>
+          <span>${cost}資産</span>
+        </div>
+        <p>${card.useEffect}</p>
+        ${renderCardUseFields(player, record)}
+        <button type="button" class="use-card-button" data-card-use-record="${record.id}" data-card-use-player="${player}">
+          2. このカードを予約
+        </button>
+      </article>
+    `;
+  }
+
+  function renderCardUseFields(player, record) {
+    const fields = cardUseFields(record.cardId);
+    if (fields.length === 0) {
+      return `<p class="card-use-no-target">対象指定なし</p>`;
+    }
+    const selected = {};
+    return `
+      <div class="card-use-target-box">
+        <div class="card-use-target-head">
+          <strong>1. 対象選択</strong>
+          <span>${cardUseTargetInstruction(record.cardId)}</span>
+        </div>
+        <div class="card-use-fields">
+          ${fields.map((field) => {
+            const options = cardUseFieldOptions(player, record, field.key, selected);
+            const chosen = selected[field.key] || options[0] || "";
+            selected[field.key] = chosen;
+            return `
+              <label class="field card-use-field">
+                <span>${field.label}</span>
+                <select data-card-use-field="${field.key}">
+                  ${renderCardUseOptionMarkup(options, player, chosen)}
+                </select>
+              </label>
+            `;
+          }).join("")}
+        </div>
+        <p class="card-use-target-note">対象候補がないカードは、条件を満たすまで予約できません。</p>
+      </div>
+    `;
+  }
+
+  function renderCardUseOptionMarkup(options, player, selected = "") {
+    if (!options.length) {
+      return `<option value="">対象候補なし</option>`;
+    }
+    return `<option value="">-</option>${options.map((id) => `<option value="${id}"${id === Number(selected) ? " selected" : ""}>${cardUseTargetLabel(id, player)}</option>`).join("")}`;
+  }
+
+  function refreshCardUseDependentFields(cardElement) {
+    const player = cardElement.dataset.cardUsePlayer;
+    const record = findCardRecord(player, cardElement.dataset.cardUseCard);
+    if (!record || record.cardId !== "CRD-011") {
+      return;
+    }
+    const fromSelect = cardElement.querySelector('[data-card-use-field="from"]');
+    const targetSelect = cardElement.querySelector('[data-card-use-field="target"]');
+    if (!fromSelect || !targetSelect) {
+      return;
+    }
+    const selectedTarget = Number(targetSelect.value || 0);
+    const options = cardUseFieldOptions(player, record, "target", { from: Number(fromSelect.value || 0) });
+    const nextSelected = options.includes(selectedTarget) ? selectedTarget : options[0] || "";
+    targetSelect.innerHTML = renderCardUseOptionMarkup(options, player, nextSelected);
+  }
+
+  function cardUseReservationFromElement(cardElement) {
+    const player = cardElement.dataset.cardUsePlayer;
+    const recordId = cardElement.dataset.cardUseCard;
+    const record = findCardRecord(player, recordId);
+    const targets = {};
+    cardElement.querySelectorAll("[data-card-use-field]").forEach((field) => {
+      const value = Number(field.value);
+      if (CELLS.includes(value)) {
+        targets[field.dataset.cardUseField] = value;
+      }
+    });
+    return normalizeCardUseReservation(player, {
+      kind: "use",
+      recordId,
+      cardId: record?.cardId,
+      targets
+    });
+  }
+
+  function updateCardUseAvailability() {
+    if (!state || !hasPendingCardUse()) {
+      return;
+    }
+    document.querySelectorAll(".use-card").forEach((cardElement) => {
+      const player = cardElement.dataset.cardUsePlayer;
+      const button = cardElement.querySelector("[data-card-use-record]");
+      if (!button) {
+        return;
+      }
+      const reservation = cardUseReservationFromElement(cardElement);
+      const validation = validateCardUseReservation(player, reservation);
+      button.disabled = !validation.ok;
+      button.title = validation.reason;
+      cardElement.classList.toggle("unavailable", !validation.ok);
+    });
+    document.querySelectorAll("[data-card-use-skip]").forEach((button) => {
+      const player = button.dataset.cardUseSkip;
+      button.disabled = Boolean(cardUseReservation(player));
+    });
+  }
+
+  function renderCardChoicePanel(player) {
+    const summary = reservationSummary(player);
+    const choice = summary.choices.find((item) => !item.reservation);
+    if (!choice && summary.choices.length === 0) {
+      return "";
+    }
+    if (!choice) {
+      return `
+        <section class="card-choice-panel reserved">
+          <div class="mini-heading">
+            <strong>カード取得予約済み</strong>
+            <span>${summary.reserved}/${summary.choices.length}</span>
+          </div>
+          <p class="choice-reserved-note">全員の予約が揃うと同時に公開・確定します。</p>
+        </section>
+      `;
+    }
+
+    const existing = cardDefinition(choice.existingCardId);
+    const options = choice.options.map((cardId) => cardDefinition(cardId)).filter(Boolean);
+    const slots = availableCardSlots(player, choice.id);
+    return `
+      <section class="card-choice-panel" data-card-choice-panel="${choice.id}">
+        <div class="mini-heading">
+          <strong>${choice.cellId}番のカード取得予約</strong>
+          <span>${summary.reserved}/${summary.choices.length}予約</span>
+        </div>
+        ${existing ? `
+          <button type="button" class="keep-trait-button" data-card-keep="${choice.id}">
+            既存効果を維持: ${existing.name}
+          </button>
+        ` : ""}
+        ${slots <= 0 ? `
+          <button type="button" class="skip-card-button" data-card-skip="${choice.id}">
+            カード取得なしで予約
+          </button>
+        ` : `
+          <div class="choice-card-grid">
+            ${options.map((card) => `
+              <button type="button" class="choice-card" data-card-choice="${choice.id}" data-card-id="${card.id}">
+                <span class="choice-card-name"><span class="trait-icon">${card.icon}</span>${card.name}</span>
+                <span class="choice-card-flavor">${card.flavor}</span>
+                <span class="choice-card-effect">${card.landEffect}</span>
+              </button>
+            `).join("")}
+          </div>
+        `}
+      </section>
+    `;
   }
 
   function renderControlModeOptions(player) {
@@ -609,7 +1899,9 @@
       const from = Number(fromSelect.value);
       const slot = Number(row.dataset.row);
       const cpuControlled = isCpuPlayer(player);
-      const slotEnabled = slot <= actionLimit(player) && !cpuControlled && !replayBusy;
+      const waitingForCards = hasPendingCardChoices();
+      const waitingForCardUse = hasPendingCardUse();
+      const slotEnabled = slot <= actionLimit(player) && !cpuControlled && !replayBusy && !waitingForCards && !waitingForCardUse;
 
       fromSelect.disabled = !slotEnabled;
       typeSelect.disabled = !slotEnabled;
@@ -622,7 +1914,11 @@
         row.classList.add("unavailable");
         row.title = cpuControlled
           ? `${CONTROL_MODES[controlModes[player]]}がこのターンの行動を自動生成します。`
-          : `このターンの行動枠は${actionLimit(player)}枠です。`;
+          : waitingForCards
+            ? "カード取得予約を完了すると次のターンへ進みます。"
+            : waitingForCardUse
+              ? "カード使用予約を完了するとコマンド入力に進みます。"
+              : `このターンの行動枠は${actionLimit(player)}枠です。`;
         return;
       }
 
@@ -746,7 +2042,7 @@
       const target = Number(option.value);
       const info = targetAvailability(player, from, type, target, units);
       option.disabled = !info.enabled;
-      option.textContent = targetLabel(target);
+      option.textContent = targetLabel(target, player, from, type);
       option.title = info.reason;
     });
   }
@@ -787,13 +2083,15 @@
     return type === "Explore" || type === "Exterminate" || type === "Move";
   }
 
-  function targetLabel(id) {
+  function targetLabel(id, player = null, from = null, type = null) {
     const current = cell(id);
     if (!current.owner) {
-      return `${id} C${current.neutralCost}`;
+      const cost = player && from && type === "Explore" ? effectiveNeutralCost(player, from, id) : current.neutralCost;
+      return `${id} C${cost}`;
     }
     const fort = current.fort ? "要塞" : "";
-    return `${id} ${current.owner}${current.value}P${fort}`;
+    const cost = player && from && type === "Exterminate" ? ` / 侵攻${effectiveInvasionCost(player, from, id)}` : "";
+    return `${id} ${current.owner}${current.value}P${fort}${cost}`;
   }
 
   function canUseSource(player, from) {
@@ -808,14 +2106,14 @@
     const targetCell = cell(target);
     return isAdjacent(from, target)
       && targetCell.owner === null
-      && state.players[player].assets >= targetCell.neutralCost;
+      && state.players[player].assets >= effectiveNeutralCost(player, from, target);
   }
 
   function canExterminateTarget(player, from, target) {
     const targetCell = cell(target);
     return isAdjacent(from, target)
       && targetCell.owner === opponent(player)
-      && state.players[player].assets >= invasionCost(targetCell);
+      && state.players[player].assets >= effectiveInvasionCost(player, from, target);
   }
 
   function canMoveTarget(player, from, target, units) {
@@ -864,7 +2162,8 @@
     }
     return source.id === HOME[player]
       || source.id === 5
-      || source.value >= 3;
+      || source.value >= 3
+      || activeTrait(player, source.id, "CRD-006");
   }
 
   function productionSiteLabel(player, source) {
@@ -879,6 +2178,9 @@
     }
     if (source.value >= 3) {
       return "3P都市・生産可";
+    }
+    if (activeTrait(player, source.id, "CRD-006")) {
+      return "城塞都市・生産可";
     }
     return "";
   }
@@ -905,6 +2207,43 @@
     els.logList.scrollTop = els.logList.scrollHeight;
   }
 
+  function currentPhaseKey() {
+    if (state.gameOver) {
+      return "result";
+    }
+    if (hasPendingCardUse()) {
+      return "card-use";
+    }
+    if (hasPendingCardChoices()) {
+      return "card-reserve";
+    }
+    if (replayBusy || currentReplayEvent) {
+      return "resolve";
+    }
+    return "command";
+  }
+
+  function renderPhaseRail() {
+    if (!els.phaseRail) {
+      return;
+    }
+    const activeKey = currentPhaseKey();
+    const activeIndex = PHASE_STEPS.findIndex((step) => step.key === activeKey);
+    els.phaseRail.innerHTML = PHASE_STEPS.map((step, index) => {
+      const status = index < activeIndex ? "done" : index === activeIndex ? "active" : "next";
+      const cardUseHint = step.key === "card-use" && activeKey === "command" && playerCards("A").length + playerCards("B").length > 0 ? " nearby" : "";
+      return `
+        <li class="phase-step ${status}${cardUseHint}">
+          <span class="phase-dot">${step.number}</span>
+          <span class="phase-text">
+            <strong>${step.label}</strong>
+            <small>${step.note}</small>
+          </span>
+        </li>
+      `;
+    }).join("");
+  }
+
   function buildVisualChanges(before, after) {
     const changes = new Map();
     CELLS.forEach((id) => {
@@ -915,6 +2254,7 @@
       if (prev.value !== next.value) types.push(next.value > prev.value ? "value-up" : "value-down");
       if (prev.fort !== next.fort) types.push("fort");
       if (prev.neutralCost !== next.neutralCost) types.push("neutral");
+      if (prev.traitCardId !== next.traitCardId) types.push("trait");
       if (prev.pieces.A !== next.pieces.A || prev.pieces.B !== next.pieces.B) types.push("pieces");
       if (types.length > 0) {
         changes.set(id, types);
@@ -977,11 +2317,18 @@
         currentReplayEvent = null;
         replayBusy = false;
         renderBoard();
+        renderPhaseRail();
+        updatePlotAvailability();
+        updateCardUseAvailability();
         updateReplayControls(`リプレイ完了：${events.length}件`);
+        refreshValidationMessage();
         return;
       }
       currentReplayEvent = events[index];
       renderBoard();
+      renderPhaseRail();
+      updatePlotAvailability();
+      updateCardUseAvailability();
       updateReplayControls(`${index + 1}/${events.length} ${currentReplayEvent.label}`);
       index += 1;
       replayTimer = window.setTimeout(step, currentReplayEvent.duration || 900);
@@ -1012,7 +2359,7 @@
     els.replayButton.disabled = !hasEvents || replayBusy;
     els.skipReplayButton.disabled = !replayBusy;
     if (els.resolveButton && state) {
-      els.resolveButton.disabled = state.gameOver || replayBusy;
+      els.resolveButton.disabled = state.gameOver || replayBusy || hasPendingCardChoices() || hasPendingCardUse();
     }
     if (els.undoButton) {
       els.undoButton.disabled = history.length === 0 || replayBusy;
@@ -1144,7 +2491,7 @@
       return {
         key: `${action.player}:Explore:${action.target}`,
         player: action.player,
-        cost: target.neutralCost,
+        cost: effectiveNeutralCost(action.player, action.from, action.target),
         priority: action.priority,
         order: action.row,
         label: `${action.target}番探索`
@@ -1158,7 +2505,7 @@
       return {
         key: `${action.player}:Exterminate:${action.target}`,
         player: action.player,
-        cost: invasionCost(target),
+        cost: effectiveInvasionCost(action.player, action.from, action.target),
         priority: action.priority,
         order: action.row,
         label: `${action.target}番侵攻`
@@ -1212,6 +2559,7 @@
         existing.actions.push(action);
         existing.priority = Math.min(existing.priority, action.priority);
         existing.rows.push(action.row);
+        existing.cost = Math.min(existing.cost, group.cost);
       } else {
         groups.set(group.key, { ...group, actions: [action], rows: [action.row] });
       }
@@ -1258,6 +2606,15 @@
       els.validationMessage.textContent = state.result;
       return;
     }
+    if (hasPendingCardUse()) {
+      const summary = cardUseReservationSummary();
+      els.validationMessage.textContent = `カード使用予約中です（${summary.reserved}/${summary.total}）。全員の予約後にコマンド入力へ進みます。`;
+      return;
+    }
+    if (hasPendingCardChoices()) {
+      els.validationMessage.textContent = "カード取得予約を完了すると次のターンへ進みます。";
+      return;
+    }
     const errors = validateCurrentInput();
     els.validationMessage.textContent = errors.join(" ");
   }
@@ -1292,10 +2649,10 @@
 
   function actionCostEstimate(action) {
     if (action.type === "Explore" && CELLS.includes(action.target)) {
-      return cell(action.target).neutralCost;
+      return effectiveNeutralCost(action.player, action.from, action.target);
     }
     if (action.type === "Exterminate" && CELLS.includes(action.target)) {
-      return invasionCost(cell(action.target));
+      return effectiveInvasionCost(action.player, action.from, action.target);
     }
     if (action.type === "Produce" || action.type === "Fortify") {
       return 3;
@@ -1315,6 +2672,8 @@
       }
       if (!groups.has(key)) {
         groups.set(key, actionCostEstimate(action));
+      } else {
+        groups.set(key, Math.min(groups.get(key), actionCostEstimate(action)));
       }
     });
     return [...groups.values()].reduce((sum, cost) => sum + cost, 0);
@@ -1522,8 +2881,10 @@
     const target = action.target ? cell(action.target) : null;
     let score = 0;
     if (action.type === "Exterminate" && target) {
-      const targetDefense = target.pieces[enemy] + (target.fort && target.pieces[enemy] > 0 ? 1 : 0);
-      const sourceAttackBonus = source.fort ? 1 : 0;
+      const targetDefense = target.pieces[enemy]
+        + (target.fort && target.pieces[enemy] > 0 ? 1 : 0)
+        + (activeTrait(enemy, action.target, "CRD-004") && target.pieces[enemy] > 0 ? 1 : 0);
+      const sourceAttackBonus = (source.fort ? 1 : 0) + (activeTrait(player, action.from, "CRD-003") ? 1 : 0);
       const attackEstimate = action.units + sourceAttackBonus;
       const targetIsProduction = isImportantProductionSite(enemy, action.target, target);
       score += 36 + target.value * 18 + action.units * 10;
@@ -1539,11 +2900,12 @@
       if (source.fort && target.value >= 2) score += 16;
     }
     if (action.type === "Explore" && target) {
+      const exploreCost = effectiveNeutralCost(player, action.from, action.target);
       score += 34 + action.units * 4;
-      if (action.target === 5) score += 62 - target.neutralCost * 14;
+      if (action.target === 5) score += 62 - exploreCost * 14;
       if (lineWouldComplete(player, action.target)) score += 80;
       if (ADJACENT[action.target].includes(5)) score += 14;
-      score -= target.neutralCost * 8;
+      score -= exploreCost * 8;
     }
     if (action.type === "Exploit") {
       const nextValue = Math.min(3, source.value + action.units);
@@ -1819,6 +3181,7 @@
     const savedVisualChanges = lastVisualChanges;
     const savedReplayEvents = lastReplayEvents;
     const savedSerial = actionSerial;
+    simulationDepth += 1;
     state = cloneState(baseState);
     turnReplayEvents = null;
     replayBusy = false;
@@ -1826,43 +3189,45 @@
     lastVisualChanges = new Map();
     lastReplayEvents = [];
 
-    const simActions = actions.map(cloneActionForSimulation);
-    const messages = [];
-    payActionCosts(simActions, messages);
-    const battleCells = new Set();
-    resolveMoves(simActions, messages);
-    resolveExplores(simActions, messages);
-    resolveExterminates(simActions, messages, battleCells);
-    resolveDomesticActions(simActions, messages, battleCells);
-    resolveBingo(messages);
+    try {
+      const simActions = actions.map(cloneActionForSimulation);
+      const messages = [];
+      payActionCosts(simActions, messages);
+      const battleCells = new Set();
+      resolveMoves(simActions, messages);
+      resolveExplores(simActions, messages);
+      resolveExterminates(simActions, messages, battleCells);
+      resolveDomesticActions(simActions, messages, battleCells);
+      resolveBingo(messages);
 
-    const result = checkVictory();
-    if (result.gameOver) {
-      state.gameOver = true;
-      state.winner = result.winner;
-      state.result = result.message;
-    }
-    if (!state.gameOver) {
-      if (state.turn >= MAX_TURN) {
-        const final = finalJudgement("10ターン終了");
+      const result = checkVictory();
+      if (result.gameOver) {
         state.gameOver = true;
-        state.winner = final.winner;
-        state.result = final.message;
-      } else {
-        state.turn += 1;
-        startTurn(messages);
+        state.winner = result.winner;
+        state.result = result.message;
       }
+      if (!state.gameOver) {
+        if (state.turn >= MAX_TURN) {
+          const final = finalJudgement("10ターン終了");
+          state.gameOver = true;
+          state.winner = final.winner;
+          state.result = final.message;
+        } else {
+          state.turn += 1;
+          startTurn(messages);
+        }
+      }
+      return cloneState(state);
+    } finally {
+      simulationDepth = Math.max(0, simulationDepth - 1);
+      state = savedState;
+      turnReplayEvents = savedReplay;
+      replayBusy = savedReplayBusy;
+      currentReplayEvent = savedCurrentReplayEvent;
+      lastVisualChanges = savedVisualChanges;
+      lastReplayEvents = savedReplayEvents;
+      actionSerial = savedSerial;
     }
-    const simulated = cloneState(state);
-
-    state = savedState;
-    turnReplayEvents = savedReplay;
-    replayBusy = savedReplayBusy;
-    currentReplayEvent = savedCurrentReplayEvent;
-    lastVisualChanges = savedVisualChanges;
-    lastReplayEvents = savedReplayEvents;
-    actionSerial = savedSerial;
-    return simulated;
   }
 
   function snapshotTotalPieces(snapshot, player) {
@@ -2111,8 +3476,41 @@
     return `${action.from}${target} ${ACTION_LABELS[action.type]} x${action.units}`;
   }
 
+  function advanceToNextTurn(messages) {
+    if (state.turn >= MAX_TURN) {
+      const final = finalJudgement("10ターン終了");
+      state.gameOver = true;
+      state.winner = final.winner;
+      state.result = final.message;
+      state.cardChoices = [];
+      state.awaitingCardChoices = false;
+      messages.push(final.message);
+      return;
+    }
+    state.turn += 1;
+    startTurn(messages);
+  }
+
+  function finishCardChoicePhase(messages) {
+    if (!hasPendingCardChoices() || !state.awaitingCardChoices || state.gameOver || !allCardChoicesReserved()) {
+      return false;
+    }
+    commitReservedCardChoices(messages);
+    state.awaitingCardChoices = false;
+    advanceToNextTurn(messages);
+    return true;
+  }
+
   function resolveTurn() {
     if (state.gameOver) {
+      return;
+    }
+    if (hasPendingCardUse()) {
+      els.validationMessage.textContent = "カード使用予約を完了するとコマンド入力に進みます。";
+      return;
+    }
+    if (hasPendingCardChoices()) {
+      els.validationMessage.textContent = "カード取得予約を完了すると次のターンへ進みます。";
       return;
     }
 
@@ -2163,19 +3561,24 @@
       state.gameOver = true;
       state.winner = result.winner;
       state.result = result.message;
+      state.cardChoices = [];
+      state.awaitingCardChoices = false;
       messages.push(result.message);
     }
 
     if (!state.gameOver) {
       if (state.turn >= MAX_TURN) {
-        const final = finalJudgement("10ターン終了");
-        state.gameOver = true;
-        state.winner = final.winner;
-        state.result = final.message;
-        messages.push(final.message);
+        advanceToNextTurn(messages);
       } else {
-        state.turn += 1;
-        startTurn(messages);
+        autoResolveCpuCardChoices(messages);
+        if (hasPendingCardChoices()) {
+          state.awaitingCardChoices = true;
+          if (!finishCardChoicePhase(messages)) {
+            messages.push("カード取得予約待ち。全員の予約後、同時確定して次ターン開始処理に進みます。");
+          }
+        } else {
+          advanceToNextTurn(messages);
+        }
       }
     }
 
@@ -2206,6 +3609,7 @@
       if (existing) {
         existing.actions.push(action);
         existing.priority = Math.min(existing.priority, action.priority);
+        existing.cost = Math.min(existing.cost, group.cost);
       } else {
         group.actions = [action];
         groups.set(group.key, group);
@@ -2252,7 +3656,7 @@
       return {
         key: `${action.player}:Explore:${action.target}`,
         player: action.player,
-        cost: target.neutralCost,
+        cost: effectiveNeutralCost(action.player, action.from, action.target),
         priority: action.priority,
         order: action.row,
         label: `${action.target}番探索`
@@ -2267,7 +3671,7 @@
       return {
         key: `${action.player}:Exterminate:${action.target}`,
         player: action.player,
-        cost: invasionCost(target),
+        cost: effectiveInvasionCost(action.player, action.from, action.target),
         priority: action.priority,
         order: action.row,
         label: `${action.target}番侵攻`
@@ -2315,6 +3719,46 @@
     return Math.max(1, target.value);
   }
 
+  function effectiveNeutralCost(player, from, target) {
+    const targetCell = cell(target);
+    if (!targetCell || targetCell.owner !== null) {
+      return 0;
+    }
+    let cost = targetCell.neutralCost;
+    if (activeTrait(player, from, "CRD-001")) {
+      cost -= 1;
+    }
+    if (target === 5 && activeTraitCells(player, "CRD-007").length > 0) {
+      cost -= 1;
+    }
+    (state.turnModifiers?.neutralDiscounts || []).forEach((modifier) => {
+      if (modifier.player === player && modifier.from === from) {
+        cost -= modifier.amount || 0;
+      }
+    });
+    return Math.max(0, cost);
+  }
+
+  function effectiveInvasionCost(player, from, target) {
+    const targetCell = cell(target);
+    if (!targetCell || targetCell.owner !== opponent(player)) {
+      return 1;
+    }
+    let cost = invasionCost(targetCell);
+    if (activeTrait(player, from, "CRD-012")) {
+      cost -= 1;
+    }
+    if (target === 5 && activeTraitCells(player, "CRD-007").length > 0) {
+      cost -= 1;
+    }
+    (state.turnModifiers?.invasionDiscounts || []).forEach((modifier) => {
+      if (modifier.player === player && modifier.target === target) {
+        cost -= modifier.amount || 0;
+      }
+    });
+    return Math.max(1, cost);
+  }
+
   function activeActions(actions, type) {
     return actions.filter((action) => action.type === type && !action.failed && action.paid);
   }
@@ -2358,18 +3802,23 @@
     if (from === target) {
       return false;
     }
+    const maxDistance = (state.turn <= 2 ? 1 : 2) + (activeTrait(player, from, "CRD-011") ? 1 : 0);
     if (state.turn <= 2) {
-      return isAdjacent(from, target);
+      return maxDistance <= 1 ? isAdjacent(from, target) : pathWithinDistance(player, from, target, maxDistance);
     }
 
+    return pathWithinDistance(player, from, target, maxDistance);
+  }
+
+  function pathWithinDistance(player, from, target, maxDistance) {
     const queue = [{ id: from, distance: 0 }];
     const visited = new Set([from]);
     while (queue.length > 0) {
       const current = queue.shift();
-      if (current.id === target && current.distance <= 2) {
+      if (current.id === target && current.distance <= maxDistance) {
         return true;
       }
-      if (current.distance >= 2) {
+      if (current.distance >= maxDistance) {
         continue;
       }
       ADJACENT[current.id].forEach((next) => {
@@ -2416,7 +3865,10 @@
       target.value = 1;
       target.fort = false;
       target.neutralCost = 0;
+      target.traitCardId = null;
+      target.traitAssignedBy = null;
       messages.push(`${winner}が${targetId}番探索に成功。${sumUnits(winningEntries)}駒が進入。`);
+      registerLandAcquisition(winner, Number(targetId), messages);
       addReplayEvent({
         kind: "explore",
         player: winner,
@@ -2477,7 +3929,9 @@
   }
 
   function fortressAttackBonus(entries) {
-    return entries.some((entry) => cell(entry.from)?.fort) ? 1 : 0;
+    const fortBonus = entries.some((entry) => cell(entry.from)?.fort) ? 1 : 0;
+    const stableBonus = entries.some((entry) => activeTrait(entry.player, entry.from, "CRD-003")) ? 1 : 0;
+    return fortBonus + stableBonus;
   }
 
   function attackStrength(entries) {
@@ -2485,7 +3939,77 @@
   }
 
   function fortressAttackText(bonus) {
-    return bonus > 0 ? "要塞攻撃補正+1、" : "";
+    return bonus > 0 ? `攻撃補正+${bonus}、` : "";
+  }
+
+  function compareCombatEntries(left, right) {
+    return (left.action.priority || 99) - (right.action.priority || 99)
+      || (left.action.row || 99) - (right.action.row || 99)
+      || String(left.action.id).localeCompare(String(right.action.id));
+  }
+
+  function firstAttackActionIdsByPlayer(reserves) {
+    const result = {};
+    PLAYERS.forEach((player) => {
+      const first = reserves
+        .filter((entry) => entry.player === player)
+        .sort(compareCombatEntries)[0];
+      if (first) {
+        result[player] = first.action.id;
+      }
+    });
+    return result;
+  }
+
+  function firstCombatSlotsByPlayer(reserves) {
+    const result = {};
+    PLAYERS.forEach((player) => {
+      const attack = reserves
+        .filter((entry) => entry.player === player)
+        .sort(compareCombatEntries)[0];
+      const defense = reserves
+        .filter((entry) => entry.player === opponent(player) && cell(entry.target)?.owner === player)
+        .sort(compareCombatEntries)[0];
+      if (!attack && !defense) {
+        return;
+      }
+      if (!defense || (attack && compareCombatEntries(attack, defense) <= 0)) {
+        result[player] = { mode: "attack", actionId: attack.action.id };
+      } else {
+        result[player] = { mode: "defense", actionId: defense.action.id, target: defense.target };
+      }
+    });
+    return result;
+  }
+
+  function turnAttackBonus(entries, firstAttackIds, firstCombatSlots) {
+    const player = entries[0]?.player;
+    if (!player) {
+      return 0;
+    }
+    let bonus = 0;
+    if (firstAttackIds[player] && entries.some((entry) => entry.action.id === firstAttackIds[player])) {
+      bonus += state.turnModifiers?.firstInvasionAttackBonus?.[player] || 0;
+    }
+    const combatSlot = firstCombatSlots[player];
+    if (combatSlot?.mode === "attack" && entries.some((entry) => entry.action.id === combatSlot.actionId)) {
+      bonus += state.turnModifiers?.firstCombatBonus?.[player] || 0;
+    }
+    return bonus;
+  }
+
+  function turnDefenseBonus(defender, targetId, entries, firstCombatSlots) {
+    const combatSlot = firstCombatSlots[defender];
+    if (combatSlot?.mode !== "defense" || Number(combatSlot.target) !== Number(targetId)) {
+      return 0;
+    }
+    return entries.some((entry) => entry.action.id === combatSlot.actionId)
+      ? state.turnModifiers?.firstCombatBonus?.[defender] || 0
+      : 0;
+  }
+
+  function defenseBonusText(bonus) {
+    return bonus > 0 ? `防衛補正+${bonus}、` : "";
   }
 
   function groupBy(items, keyFn) {
@@ -2512,12 +4036,15 @@
       return;
     }
 
+    const firstAttackIds = firstAttackActionIdsByPlayer(reserves);
+    const firstCombatSlots = firstCombatSlotsByPlayer(reserves);
+
     reserves.forEach((entry) => {
       cell(entry.from).pieces[entry.player] -= entry.units;
     });
 
     const consumed = new Set();
-    resolveFrontCollisions(reserves, consumed, messages, battleCells);
+    resolveFrontCollisions(reserves, consumed, messages, battleCells, firstAttackIds, firstCombatSlots);
 
     const normalEntries = reserves.filter((entry, index) => !consumed.has(index));
     const byTarget = groupBy(normalEntries, (entry) => entry.target);
@@ -2545,7 +4072,7 @@
 
       const defender = target.owner;
       const attackUnits = sumUnits(entries);
-      const attackBonus = fortressAttackBonus(entries);
+      const attackBonus = fortressAttackBonus(entries) + turnAttackBonus(entries, firstAttackIds, firstCombatSlots);
       const attackerStrength = attackUnits + attackBonus;
       const defenderUnits = target.pieces[defender];
       const directions = new Set(entries.map((entry) => entry.from)).size;
@@ -2557,6 +4084,11 @@
       if (target.fort && defenderUnits > 0) {
         defenseStrength += 1;
       }
+      if (activeTrait(defender, Number(targetId), "CRD-004") && defenderUnits > 0) {
+        defenseStrength += 1;
+      }
+      const cardDefenseBonus = turnDefenseBonus(defender, Number(targetId), entries, firstCombatSlots);
+      defenseStrength += cardDefenseBonus;
 
       if (defenderUnits === 0) {
         captureTarget(target, attacker, attackUnits, messages, `${attacker}が${targetId}番を無血占領。`);
@@ -2565,6 +4097,7 @@
 
       const siegeText = siege ? "包囲攻撃、" : "";
       const fortText = fortressAttackText(attackBonus);
+      const defenseText = defenseBonusText(cardDefenseBonus);
       if (attackerStrength > defenseStrength) {
         const survivors = Math.max(1, Math.min(attackUnits, attackerStrength - defenseStrength));
         captureTarget(
@@ -2572,7 +4105,7 @@
           attacker,
           survivors,
           messages,
-          `${attacker}が${targetId}番で${siegeText}${fortText}戦闘勝利。${survivors}駒が残存。`
+          `${attacker}が${targetId}番で${siegeText}${fortText}${defenseText}戦闘勝利。${survivors}駒が残存。`
         );
       } else if (attackerStrength < defenseStrength) {
         applyInvasionDamage(target);
@@ -2582,16 +4115,16 @@
           survivors = 1;
         }
         target.pieces[defender] = Math.min(MAX_PIECES, survivors);
-        messages.push(`${defender}が${targetId}番で${siegeText}${fortText}防衛成功。${target.pieces[defender]}駒が残存。`);
+        messages.push(`${defender}が${targetId}番で${siegeText}${fortText}${defenseText}防衛成功。${target.pieces[defender]}駒が残存。`);
       } else {
         applyInvasionDamage(target);
         target.pieces[defender] = 0;
-        messages.push(`${targetId}番の戦闘は${siegeText}${fortText}相打ち。土地所有者は${defender}のまま。`);
+        messages.push(`${targetId}番の戦闘は${siegeText}${fortText}${defenseText}相打ち。土地所有者は${defender}のまま。`);
       }
     });
   }
 
-  function resolveFrontCollisions(reserves, consumed, messages, battleCells) {
+  function resolveFrontCollisions(reserves, consumed, messages, battleCells, firstAttackIds, firstCombatSlots) {
     reserves.forEach((entry, index) => {
       if (consumed.has(index)) {
         return;
@@ -2624,8 +4157,8 @@
       const sideB = reserves.filter((candidate, candidateIndex) => pairIndexes.includes(candidateIndex) && candidate.player !== entry.player);
       const unitsA = sumUnits(sideA);
       const unitsB = sumUnits(sideB);
-      const bonusA = fortressAttackBonus(sideA);
-      const bonusB = fortressAttackBonus(sideB);
+      const bonusA = fortressAttackBonus(sideA) + turnAttackBonus(sideA, firstAttackIds, firstCombatSlots);
+      const bonusB = fortressAttackBonus(sideB) + turnAttackBonus(sideB, firstAttackIds, firstCombatSlots);
       const strengthA = unitsA + bonusA;
       const strengthB = unitsB + bonusB;
       pairIndexes.forEach((candidateIndex) => consumed.add(candidateIndex));
@@ -2676,12 +4209,16 @@
 
   function captureTarget(target, attacker, survivors, messages, message) {
     const defender = opponent(attacker);
+    const previousOwner = target.owner;
+    const existingCardId = target.traitCardId;
+    removePlayerCardForCell(previousOwner, target.id);
     applyInvasionDamage(target);
     target.owner = attacker;
     target.neutralCost = 0;
     target.pieces[defender] = 0;
     target.pieces[attacker] = Math.min(MAX_PIECES, survivors);
     messages.push(message);
+    registerLandAcquisition(attacker, target.id, messages, { existingCardId });
     if (target.id === 5) {
       addReplayEvent({
         kind: "center-capture",
@@ -2844,9 +4381,93 @@
   }
 
   function startTurn(messages) {
+    ensureCardUseState();
+    state.turnModifiers = createTurnModifiers();
+    state.awaitingCardUse = false;
+    state.cardUseReservations = {};
     messages.push(`ターン${state.turn}開始。`);
     resolvePendingProduction(messages);
+    resolveLandTraitEffects(messages);
     collectIncome(messages);
+    beginCardUsePhase(messages);
+  }
+
+  function resolveLandTraitEffects(messages) {
+    PLAYERS.forEach((player) => {
+      activeTraitCells(player).forEach((current) => {
+        const card = cardDefinition(current.traitCardId);
+        if (!card) {
+          return;
+        }
+        if (card.id === "CRD-001") {
+          const targetId = ADJACENT[current.id]
+            .filter((id) => cell(id).owner === null && cell(id).neutralCost > 0)
+            .sort((left, right) => cell(right).neutralCost - cell(left).neutralCost)[0];
+          if (targetId) {
+            const target = cell(targetId);
+            const before = target.neutralCost;
+            target.neutralCost = Math.max(0, target.neutralCost - 1);
+            messages.push(`${player}の${current.id}番「${card.name}」: ${targetId}番中立コスト${before}→${target.neutralCost}。`);
+          }
+        }
+
+        if (card.id === "CRD-002" && current.pieces[player] > 0) {
+          const gained = addAssets(player, 1);
+          if (gained > 0) {
+            messages.push(`${player}の${current.id}番「${card.name}」: 資産+${gained}。`);
+          }
+        }
+
+        if (card.id === "CRD-005" && landConnectedToHome(player, current.id)) {
+          const gained = addAssets(player, 1);
+          if (gained > 0) {
+            messages.push(`${player}の${current.id}番「${card.name}」: 本拠接続により資産+${gained}。`);
+          }
+        }
+
+        if (card.id === "CRD-009") {
+          const enemy = opponent(player);
+          const targetId = ADJACENT[current.id]
+            .filter((id) => cell(id).owner === enemy && cell(id).value >= 3)
+            .sort((left, right) => cell(right).value - cell(left).value)[0];
+          if (targetId) {
+            const target = cell(targetId);
+            const before = target.value;
+            target.value = Math.max(2, target.value - 1);
+            messages.push(`${player}の${current.id}番「${card.name}」: ${enemy}の${targetId}番${before}P→${target.value}P。`);
+          }
+        }
+
+        if (card.id === "CRD-010"
+          && current.pieces[player] <= 0
+          && totalPieces(player) < MAX_PIECES) {
+          current.pieces[player] += 1;
+          messages.push(`${player}の${current.id}番「${card.name}」: 空いた土地に1駒配置。`);
+        }
+      });
+      capAssets(player);
+    });
+  }
+
+  function landConnectedToHome(player, landId) {
+    if (cell(HOME[player]).owner !== player) {
+      return false;
+    }
+    const visited = new Set([HOME[player]]);
+    const queue = [HOME[player]];
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (current === landId) {
+        return true;
+      }
+      ADJACENT[current].forEach((next) => {
+        if (!visited.has(next) && cell(next).owner === player) {
+          visited.add(next);
+          queue.push(next);
+        }
+      });
+    }
+    return false;
   }
 
   function resolvePendingProduction(messages) {
@@ -3003,11 +4624,39 @@
   }
 
   function handlePlotInput(event) {
+    if (event.target.matches("[data-card-use-field]")) {
+      const cardElement = event.target.closest(".use-card");
+      if (cardElement) {
+        refreshCardUseDependentFields(cardElement);
+      }
+      updateCardUseAvailability();
+      return;
+    }
     if (event.target.matches('[data-cpu-mode]')) {
+      const beforeState = cloneState(state);
       const player = event.target.dataset.cpuMode;
       controlModes[player] = event.target.value;
+      if (hasPendingCardUse()) {
+        const messages = [];
+        turnReplayEvents = [];
+        autoResolveCpuCardUses(messages);
+        const finished = finishCardUsePhase(messages);
+        const generatedReplay = turnReplayEvents || [];
+        turnReplayEvents = null;
+        lastVisualChanges = buildVisualChanges(beforeState, state);
+        if (finished) {
+          lastReplayEvents = generatedReplay;
+        }
+        pushLog(messages);
+        render();
+        if (finished && generatedReplay.length > 0) {
+          window.setTimeout(() => playReplay(generatedReplay), 120);
+        }
+        return;
+      }
       renderPlayers();
       updatePlotAvailability();
+      updateCardUseAvailability();
       refreshValidationMessage();
       return;
     }
@@ -3015,6 +4664,64 @@
       updatePlotAvailability();
       refreshValidationMessage();
     }
+  }
+
+  function handlePlayerClick(event) {
+    const useCardButton = event.target.closest("[data-card-use-record]");
+    const skipUseButton = event.target.closest("[data-card-use-skip]");
+    if (useCardButton || skipUseButton) {
+      const beforeState = cloneState(state);
+      const messages = [];
+      turnReplayEvents = [];
+      let finished = false;
+      if (skipUseButton) {
+        reserveCardUse(skipUseButton.dataset.cardUseSkip, { kind: "skip" }, messages);
+      }
+      if (useCardButton) {
+        const cardElement = useCardButton.closest(".use-card");
+        if (cardElement) {
+          const player = useCardButton.dataset.cardUsePlayer;
+          reserveCardUse(player, cardUseReservationFromElement(cardElement), messages);
+        }
+      }
+      autoResolveCpuCardUses(messages);
+      finished = finishCardUsePhase(messages);
+      const generatedReplay = turnReplayEvents || [];
+      turnReplayEvents = null;
+      lastVisualChanges = buildVisualChanges(beforeState, state);
+      if (finished) {
+        lastReplayEvents = generatedReplay;
+      }
+      pushLog(messages);
+      render();
+      if (finished && generatedReplay.length > 0) {
+        window.setTimeout(() => playReplay(generatedReplay), 120);
+      }
+      return;
+    }
+
+    const keepButton = event.target.closest("[data-card-keep]");
+    const choiceButton = event.target.closest("[data-card-choice]");
+    const skipButton = event.target.closest("[data-card-skip]");
+    if (!keepButton && !choiceButton && !skipButton) {
+      return;
+    }
+    const beforeState = cloneState(state);
+    const messages = [];
+    if (keepButton) {
+      reserveCardChoice(keepButton.dataset.cardKeep, { kind: "keep" }, messages);
+    }
+    if (choiceButton) {
+      reserveCardChoice(choiceButton.dataset.cardChoice, { kind: "new", cardId: choiceButton.dataset.cardId }, messages);
+    }
+    if (skipButton) {
+      reserveCardChoice(skipButton.dataset.cardSkip, { kind: "skip" }, messages);
+    }
+    autoResolveCpuCardChoices(messages);
+    finishCardChoicePhase(messages);
+    lastVisualChanges = buildVisualChanges(beforeState, state);
+    pushLog(messages);
+    render();
   }
 
   function ensureTutorialOverlay() {
@@ -3102,6 +4809,7 @@
   els.replayButton?.addEventListener("click", () => playReplay(lastReplayEvents));
   els.skipReplayButton?.addEventListener("click", () => stopReplay());
   els.tutorialButton?.addEventListener("click", startTutorial);
+  els.players.addEventListener("click", handlePlayerClick);
   els.players.addEventListener("change", handlePlotInput);
   els.players.addEventListener("input", handlePlotInput);
 
