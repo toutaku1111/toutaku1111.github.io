@@ -2500,6 +2500,29 @@
     return map;
   }
 
+  function declaredAttackKey(player, target) {
+    return `${player}:${target}`;
+  }
+
+  function buildDeclaredAttackMap(reserves) {
+    const map = new Map();
+    reserves.forEach((entry) => {
+      const key = declaredAttackKey(entry.player, entry.target);
+      if (!map.has(key)) {
+        map.set(key, {
+          player: entry.player,
+          target: entry.target,
+          sources: new Set(),
+          units: 0
+        });
+      }
+      const info = map.get(key);
+      info.sources.add(entry.from);
+      info.units += entry.units;
+    });
+    return map;
+  }
+
   function resolveExterminates(actions, messages, battleCells) {
     const reserves = reserveActions(activeActions(actions, "Exterminate"), (action) => {
       const target = cell(action.target);
@@ -2511,6 +2534,8 @@
     if (reserves.length === 0) {
       return;
     }
+
+    const declaredAttackMap = buildDeclaredAttackMap(reserves);
 
     reserves.forEach((entry) => {
       cell(entry.from).pieces[entry.player] -= entry.units;
@@ -2548,8 +2573,15 @@
       const attackBonus = fortressAttackBonus(entries);
       const attackerStrength = attackUnits + attackBonus;
       const defenderUnits = target.pieces[defender];
-      const directions = new Set(entries.map((entry) => entry.from)).size;
-      const siege = directions >= 2;
+      const actualDirections = new Set(entries.map((entry) => entry.from)).size;
+      const declaredInfo = declaredAttackMap.get(declaredAttackKey(attacker, Number(targetId)));
+      const declaredDirections = declaredInfo ? declaredInfo.sources.size : actualDirections;
+      const siege = declaredDirections >= 2;
+      if (siege && actualDirections < declaredDirections) {
+        messages.push(`${attacker}は${targetId}番へ${declaredDirections}方向侵攻。正面衝突後も包囲攻撃成立。`);
+      } else if (siege) {
+        messages.push(`${attacker}は${targetId}番へ${declaredDirections}方向侵攻。包囲攻撃成立。`);
+      }
       let defenseStrength = defenderUnits;
       if (siege) {
         defenseStrength = Math.max(0, defenseStrength - 1);
