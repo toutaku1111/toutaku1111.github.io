@@ -319,6 +319,7 @@
   let tutorialIndex = 0;
   let tutorialOverlay = null;
   let simulationDepth = 0;
+  let directMoveSource = null;
 
   function opponent(player) {
     return player === "A" ? "B" : "A";
@@ -1296,6 +1297,7 @@
     renderBoard();
     renderPlayers();
     updatePlotAvailability();
+    updateBoardReservationMarkers();
     updateCardUseAvailability();
     renderLog();
     renderPhaseRail();
@@ -1354,7 +1356,6 @@
       if (productionLabel) tags.push("生産可");
       if (current.fort) tags.push("要塞");
       if (current.fort) tags.push("攻防+1");
-      if (trait) tags.push(trait.name);
 
       const value = current.owner
         ? `${current.value}P`
@@ -1363,7 +1364,7 @@
       const foot = current.owner
         ? trait
           ? `土地特性: ${trait.name}${current.value >= 2 ? " 発動中" : " 休眠"}`
-          : productionLabel || (current.fort ? `${current.value}P要塞・攻防+1` : "通常土地")
+          : current.fort ? `${current.value}P要塞・攻防+1` : "通常土地"
         : current.neutralCost > 0 ? "中立コストあり" : "開放中立地";
 
       square.innerHTML = `
@@ -1374,14 +1375,20 @@
         <div class="cell-main">
           <span class="owner-label ${owner}">${ownerText}</span>
           <span class="value-label">${value}</span>
-          <div class="pieces">${renderPieceStack("A", current.pieces.A)}${renderPieceStack("B", current.pieces.B)}</div>
+          <div class="pieces">${renderPieceStack("A", current.pieces.A, id)}${renderPieceStack("B", current.pieces.B, id)}</div>
           ${trait ? renderLandTraitBadge(trait, current.value >= 2) : ""}
         </div>
-        <div class="cell-foot">${foot}</div>
+        <div class="cell-bottom">
+          ${renderDomesticControls(id, current)}
+          <div class="cell-foot">${foot}</div>
+        </div>
       `;
       els.board.appendChild(square);
     });
     els.board.insertAdjacentHTML("beforeend", renderArrowOverlay());
+    if (directMoveSource) {
+      els.board.querySelector(`[data-cell-id="${directMoveSource.cellId}"]`)?.classList.add("direct-source");
+    }
   }
 
   function applyVisualClasses(square, id) {
@@ -1527,19 +1534,180 @@
     };
   }
 
-  function renderPieceStack(player, count) {
+  function renderPieceStack(player, count, cellId) {
     if (count <= 0) {
       return "";
     }
     const soldiers = Array.from({ length: count }, () => renderSoldierIcon(player)).join("");
-    return `<span class="piece-stack ${player}">${soldiers}<span>${player}x${count}</span></span>`;
+    const draggable = !isCpuPlayer(player) && !state.gameOver && !replayBusy && !hasPendingCardChoices() && !hasPendingCardUse();
+    return `<button type="button" class="piece-stack ${player} direct-piece" data-direct-player="${player}" data-direct-from="${cellId}" draggable="${draggable}"${draggable ? "" : " disabled"} aria-label="${player}の駒${count}個。${cellId}番から盤上操作"><span class="piece-icons">${soldiers}</span><span>${player}x${count}</span></button>`;
+  }
+
+  function renderDomesticControls(cellId, current) {
+    if (!current.owner) return "";
+    const player = current.owner;
+    const availability = actionAvailability(player, cellId);
+    const locked = isCpuPlayer(player) || state.gameOver || replayBusy || hasPendingCardChoices() || hasPendingCardUse();
+    const icons = { Exploit: "◆", Fortify: "▣", Produce: "+" };
+    return `<div class="cell-domestic-actions" aria-label="${cellId}番の内政">${["Exploit", "Fortify", "Produce"].map((type) => {
+      const enabled = availability[type].enabled && !locked;
+      const reason = locked ? "現在は盤上から予約できません。" : availability[type].reason;
+      return `<button type="button" data-domestic-action="${type}" data-domestic-player="${player}" data-domestic-cell="${cellId}"${enabled ? "" : ` aria-disabled="true" data-domestic-reason="${reason}"`} title="${enabled ? `${ACTION_LABELS[type]}を予約` : reason}"><span>${icons[type]}</span>${ACTION_LABELS[type]}</button>`;
+    }).join("")}</div>`;
+  }
+
+  function directActionsFor(player, from, target) {
+    if (from === target) {
+      const availability = actionAvailability(player, from);
+      return ["Exploit", "Fortify", "Produce"].filter((type) => availability[type].enabled);
+    }
+    return ["Explore", "Exterminate", "Move"]
+      .filter((type) => targetAvailability(player, from, type, target, 1).enabled);
+  }
+
+  function directDropInfo(player, from, target) {
+    if (from === target) {
+      return { actions: [], reason: "内政は土地に表示されている「開発・要塞化・生産」ボタンから直接予約できます。", short: "内政は土地ボタン" };
+    }
+    const actions = directActionsFor(player, from, target);
+    if (actions.length > 0) {
+      return { actions, reason: "", short: actions.map((type) => ACTION_LABELS[type]).join(" / ") };
+    }
+    const destination = cell(target);
+    if (!isAdjacent(from, target) && destination.owner !== player) {
+      return { actions, reason: `${from}番と${target}番は隣接していません。探索と侵攻は上下左右に隣接する土地だけが対象です。`, short: "隣接していない" };
+    }
+    if (destination.owner === null) {
+      const cost = effectiveNeutralCost(player, from, target);
+      return state.players[player].assets < cost
+        ? { actions, reason: `探索には${cost}資産必要ですが、${player}の所持資産は${state.players[player].assets}です。`, short: `資産不足 ${state.players[player].assets}/${cost}` }
+        : { actions, reason: "この中立地は現在、この起点から探索できません。", short: "探索不可" };
+    }
+    if (destination.owner === opponent(player)) {
+      const cost = effectiveInvasionCost(player, from, target);
+      return state.players[player].assets < cost
+        ? { actions, reason: `侵攻には${cost}資産必要ですが、${player}の所持資産は${state.players[player].assets}です。`, short: `資産不足 ${state.players[player].assets}/${cost}` }
+        : { actions, reason: "この敵土地へは現在侵攻できません。起点との隣接関係を確認してください。", short: "侵攻不可" };
+    }
+    return { actions, reason: "移動先まで自国支配地でつながっていないか、移動先の駒が上限3個に達しています。", short: "移動不可" };
+  }
+
+  function showDirectDropGuides(player, from) {
+    CELLS.forEach((target) => {
+      const targetCell = els.board.querySelector(`[data-cell-id="${target}"]`);
+      if (!targetCell) return;
+      const info = directDropInfo(player, from, target);
+      targetCell.classList.add(info.actions.length > 0 ? "direct-drop-valid" : "direct-drop-invalid");
+      const hint = document.createElement("span");
+      hint.className = `direct-drop-hint ${info.actions.length > 0 ? "valid" : "invalid"}`;
+      hint.textContent = info.short;
+      targetCell.appendChild(hint);
+    });
+  }
+
+  function reservationMarker(type) {
+    return {
+      Explore: { icon: "⌖", label: "探索予定" },
+      Exterminate: { icon: "⚔", label: "侵攻予定" },
+      Move: { icon: "➜", label: "移動予定" },
+      Exploit: { icon: "◆", label: "開発予定" },
+      Fortify: { icon: "▣", label: "要塞化予定" },
+      Produce: { icon: "+", label: "生産予定" }
+    }[type] || null;
+  }
+
+  function updateBoardReservationMarkers() {
+    els.board.querySelectorAll(".board-reservation-marker").forEach((marker) => marker.remove());
+    document.querySelectorAll(".plot-row").forEach((row) => {
+      if (row.classList.contains("unavailable") || isCpuPlayer(row.dataset.player)) return;
+      const type = row.querySelector('[data-field="type"]')?.value;
+      const from = Number(row.querySelector('[data-field="from"]')?.value);
+      const target = Number(row.querySelector('[data-field="target"]')?.value);
+      const markerInfo = reservationMarker(type);
+      const markerCellId = needsTarget(type) ? target : from;
+      if (!markerInfo || !CELLS.includes(markerCellId)) return;
+      const targetCell = els.board.querySelector(`[data-cell-id="${markerCellId}"]`);
+      if (!targetCell) return;
+      const marker = document.createElement("div");
+      marker.className = `board-reservation-marker marker-${row.dataset.player} marker-${type}`;
+      const markerIndex = targetCell.querySelectorAll(".board-reservation-marker").length;
+      marker.style.bottom = `${7 + markerIndex * 32}px`;
+      marker.title = `${row.dataset.player}: ${from}番${needsTarget(type) ? `から${target}番へ` : "で"}${markerInfo.label}`;
+      marker.innerHTML = `<span class="reservation-icon">${markerInfo.icon}</span><span><strong>${row.dataset.player}</strong>${markerInfo.label}</span>`;
+      targetCell.appendChild(marker);
+    });
+  }
+
+  function clearDirectMove() {
+    directMoveSource = null;
+    els.board.querySelectorAll(".direct-source, .direct-target, .direct-drop-valid, .direct-drop-invalid").forEach((item) => item.classList.remove("direct-source", "direct-target", "direct-drop-valid", "direct-drop-invalid"));
+    els.board.querySelectorAll(".direct-drop-hint").forEach((hint) => hint.remove());
+  }
+
+  function firstDirectPlotRow(player) {
+    return [...document.querySelectorAll(`.plot-row[data-player="${player}"]`)].find((row) => {
+      const slot = Number(row.dataset.row);
+      const type = row.querySelector('[data-field="type"]');
+      return slot <= actionLimit(player) && !type.disabled && !type.value;
+    }) || null;
+  }
+
+  function reserveDirectAction(player, from, target, type) {
+    const row = firstDirectPlotRow(player);
+    if (!row) {
+      els.validationMessage.textContent = `${player}の空いている行動枠がありません。既存の予約を変更する場合は操作パネルを使ってください。`;
+      clearDirectMove();
+      return;
+    }
+    row.querySelector('[data-field="from"]').value = String(from);
+    row.querySelector('[data-field="type"]').value = type;
+    row.querySelector('[data-field="units"]').value = "1";
+    updatePlotAvailability();
+    row.querySelector('[data-field="target"]').value = needsTarget(type) ? String(target) : "";
+    updatePlotAvailability();
+    updateBoardReservationMarkers();
+    refreshValidationMessage();
+    row.classList.add("direct-reserved");
+    window.setTimeout(() => row.classList.remove("direct-reserved"), 900);
+    clearDirectMove();
+  }
+
+  function showDirectFailure(target, reason) {
+    clearDirectMove();
+    els.validationMessage.textContent = reason;
+    const targetCell = els.board.querySelector(`[data-cell-id="${target}"]`);
+    if (!targetCell) return;
+    const error = document.createElement("div");
+    error.className = "direct-inline-error";
+    error.textContent = reason;
+    targetCell.appendChild(error);
+    window.setTimeout(() => error.remove(), 3200);
+  }
+
+  function beginDirectMove(player, from) {
+    clearDirectMove();
+    if (isCpuPlayer(player) || state.gameOver || replayBusy || hasPendingCardChoices() || hasPendingCardUse()) return;
+    directMoveSource = { player, cellId: from };
+    els.board.querySelector(`[data-cell-id="${from}"]`)?.classList.add("direct-source");
+    showDirectDropGuides(player, from);
+  }
+
+  function completeDirectMove(target) {
+    if (!directMoveSource) return;
+    const { player, cellId: from } = directMoveSource;
+    const info = directDropInfo(player, from, target);
+    if (info.actions.length === 1) {
+      reserveDirectAction(player, from, target, info.actions[0]);
+      return;
+    }
+    showDirectFailure(target, info.reason || "この場所には置けません。");
   }
 
   function renderLandTraitBadge(trait, active) {
     return `
-      <div class="land-trait ${active ? "active" : "inactive"}" title="${trait.landEffect}">
+      <div class="land-trait ${active ? "active" : "inactive"}" title="${trait.name}: ${trait.landEffect}" aria-label="土地特性 ${trait.name}${active ? "、発動中" : "、休眠中"}" tabindex="0">
         <span class="trait-icon">${trait.icon}</span>
-        <span>${trait.name}</span>
+        <span class="trait-name">${trait.name}</span>
       </div>
     `;
   }
@@ -4627,6 +4795,7 @@
     lastVisualChanges = new Map();
     lastReplayEvents = [];
     currentReplayEvent = null;
+    directMoveSource = null;
     render();
   }
 
@@ -4639,6 +4808,7 @@
     lastVisualChanges = new Map();
     lastReplayEvents = [];
     currentReplayEvent = null;
+    directMoveSource = null;
     render();
   }
 
@@ -4691,6 +4861,7 @@
     }
     if (event.target.matches('[data-field="from"], [data-field="type"], [data-field="target"], [data-field="units"], [data-field="priority"]')) {
       updatePlotAvailability();
+      updateBoardReservationMarkers();
       refreshValidationMessage();
     }
   }
@@ -4841,6 +5012,43 @@
   els.players.addEventListener("click", handlePlayerClick);
   els.players.addEventListener("change", handlePlotInput);
   els.players.addEventListener("input", handlePlotInput);
+  els.board.addEventListener("dragstart", (event) => {
+    const piece = event.target.closest("[data-direct-player]");
+    if (!piece) return;
+    beginDirectMove(piece.dataset.directPlayer, Number(piece.dataset.directFrom));
+    event.dataTransfer?.setData("text/plain", piece.dataset.directFrom);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+  });
+  els.board.addEventListener("dragover", (event) => {
+    const target = event.target.closest("[data-cell-id]");
+    if (!target || !directMoveSource) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  });
+  els.board.addEventListener("drop", (event) => {
+    const target = event.target.closest("[data-cell-id]");
+    if (!target || !directMoveSource) return;
+    event.preventDefault();
+    completeDirectMove(Number(target.dataset.cellId));
+  });
+  els.board.addEventListener("click", (event) => {
+    const domesticButton = event.target.closest("[data-domestic-action]");
+    if (domesticButton) {
+      if (domesticButton.getAttribute("aria-disabled") === "true") {
+        showDirectFailure(Number(domesticButton.dataset.domesticCell), domesticButton.dataset.domesticReason || "現在この行動は予約できません。");
+        return;
+      }
+      reserveDirectAction(domesticButton.dataset.domesticPlayer, Number(domesticButton.dataset.domesticCell), Number(domesticButton.dataset.domesticCell), domesticButton.dataset.domesticAction);
+      return;
+    }
+    const piece = event.target.closest("[data-direct-player]");
+    if (piece) {
+      beginDirectMove(piece.dataset.directPlayer, Number(piece.dataset.directFrom));
+      return;
+    }
+    const target = event.target.closest("[data-cell-id]");
+    if (target && directMoveSource) completeDirectMove(Number(target.dataset.cellId));
+  });
 
   newGame();
   if (location.hash === "#tutorialButton") {
