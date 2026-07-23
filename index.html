@@ -51,7 +51,10 @@
           <div class="log-tools">
             <button type="button" id="copyLogButton">コピー</button>
           </div>
-          <ol id="logList" class="log-list"></ol>
+          <div class="log-track">
+            <ol id="logList" class="log-list"></ol>
+            <ol id="phaseRail" class="phase-rail" aria-label="ターンステップ"></ol>
+          </div>
         </div>
       </details>
 
@@ -60,6 +63,7 @@
           <h2>盤面</h2>
         </summary>
         <div class="panel-body board-body">
+          <p class="board-direct-hint"><strong>盤上操作:</strong> 駒を中立・敵・自国の土地へ置くと、探索・侵攻・移動を直接予約します。内政は各土地のボタンから予約できます。</p>
           <div class="board" id="board"></div>
           <div class="replay-strip" aria-label="ターンリプレイ">
             <div class="replay-info">
@@ -77,6 +81,7 @@
             <span><i class="legend-chip neutral"></i>中立</span>
             <span><i class="legend-chip fort"></i>要塞（防衛+1/攻撃+1）</span>
             <span><i class="legend-chip production"></i>生産拠点</span>
+            <span><i class="legend-chip card"></i>土地特性カード</span>
           </div>
         </div>
       </details>
@@ -110,6 +115,8 @@
             <li>生産は本拠地・中央都市国家・3P都市で実行できます。3P都市は、3P以上の自国支配地です。</li>
             <li>要塞は資産・勝利点を生みませんが、防衛時+1、要塞から侵攻する時も攻撃側+1として扱います。</li>
             <li>本拠接続ビンゴ成立時は、成立した行・列の中央マスが+1Pされます。</li>
+            <li>カード使用はターン開始後・コマンド指定前に予約します。全員の予約後に同時公開・解決し、その後コマンド入力へ進みます。</li>
+            <li>カード取得はターン終了時に予約します。取得カードも全員の予約後に同時確定します。</li>
             <li>ターン解決後、駒移動・侵攻矢印と変化マスのリプレイ演出が自動再生されます。</li>
             <li>各プレイヤーの操作欄で「弱CPU」「ノーマルCPU」「軍師CPU」を選ぶと、ターン解決時にその陣営の行動をCPUが自動生成します。</li>
             <li>両陣営をCPUにすると、CPU vs CPUの検証もできます。</li>
